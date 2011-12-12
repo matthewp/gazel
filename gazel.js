@@ -1,73 +1,76 @@
-﻿(function () {
-    /// <reference path="utils.js"/>
+(function () {
+    'use strict';
 
-    var DATABASE_NAME = "Envelopely";
+    var _exists = function (obj) {
+        return typeof obj !== "undefined" && obj !== null;
+    };
 
-    var DataStore = DataStore || {};
-    DataStore = (function () {
-        function DataStore(storeName, version) {
-            if(!Object.exists(storeName) || !Object.exists(version)) {
-                throw "Error: Must provide store and version.";
-            }
+    var gazel = gazel || {};
+    gazel.version = "1.0";
+    gazel.dbName = "gazeldb";
 
-            this.StoreName = storeName;
-            this.Version = version;
-        }
+    window.indexedDB = window.indexedDB || window.mozIndexedDB
+        || window.msIndexedDB || window.webkitIndexedDB || window.oIndexedDB;
+    window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction;
 
-        function _getDatabase(ds, onsuccess, onerror) {
-            if (Object.exists(ds.Database) && Object.exists(onsuccess)) {
-                onsuccess(ds.Database);
+    gazel.compatible = _exists(window.indexedDB) && _exists(window.localStorage)
+        && _exists(window.IDBTransaction);
+
+    var ixdb = ixdb || {};
+    ixdb = (function () {
+        var osName = "gazelos";
+        ixdb.os = {};
+
+        function _getDatabase(onsuccess, onerror) {
+            if (_exists(ixdb._db) && _exists(onsuccess)) {
+                onsuccess(ixdb._db);
             } else {
-                var ixDB = window.indexedDB || window.msIndexedDB || null;
-
-                var req = ixDB.open(DATABASE_NAME);
+                var req = window.indexedDB.open(gazel.dbName);
                 req.onsuccess = function (e) {
-                    ds.Database = e.target.result;
-                    if (Object.exists(onsuccess)) { onsuccess(ds.Database); }
+                    ixdb._db = e.target.result;
+                    if (_exists(onsuccess)) { onsuccess(ixdb._db); }
                 };
                 req.onerror = onerror;
             }
-        }
+        };
 
-        function _createObjectStore(ds, db, onsuccess, onerror) {
+        function _createObjectStore(db, onsuccess, onerror) {
             try {
-                var req = db.setVersion(ds.Version);
+                var req = db.setVersion(gazel.version);
                 req.onerror = function (e) {
-                    if (Object.exists(obj) && Object.exists(onerror)) { onerror(e.message); }
+                    _handleError(e.message, onerror);
                 };
                 req.onsuccess = function (e) {
                     var store;
                     var tx = e.target.result;
                     tx.onerror = function (e) {
-                        if (Object.exists(onerror)) { onerror(e.message); }
+                        _handleError(e.message, onerror);
                     };
                     tx.oncomplete = function (e) {
-                        if (Object.exists(onsuccess)) { onsuccess(store); }
+                        if (_exists(onsuccess)) { onsuccess(store); }
                     };
-                    store = db.createObjectStore(ds.StoreName);
+                    store = db.createObjectStore(osName);
                 };
-            } catch (ex) { if(Object.exists(onerror)) {onerror(ex);} }
-        }
+            } catch (ex) { _handleError(ex, onerror); }
+        };
 
-        function _getObjectStore(ds, onsuccess, onerror, accessLevel) {
-            if (Object.exists(ds.ObjectStore) && Object.exists(onsuccess)) {
-                onsuccess(ds.ObjectStore);
+        function _getObjectStore(onsuccess, onerror, accessLevel) {
+            if (_exists(ixdb.os[accessLevel]) && _exists(onsuccess)) {
+                onsuccess(ixdb.os[accessLevel]);
             } else {
                 var get = function (db) {
-                    var tx = db.transaction([ds.StoreName], accessLevel);
+                    var tx = db.transaction([osName], accessLevel);
                     tx.onerror = onerror;
                     try {
-                        var store = tx.objectStore(ds.StoreName);
-                        if(Object.exists(onsuccess)) { onsuccess(store); }
-                    } catch (ex) {
-                        if (Object.exists(onerror)) { onerror(ex); }
-                    }
+                        ixdb.os[accessLevel] = tx.objectStore(osName);
+                        if (_exists(onsuccess)) { onsuccess(ixdb.os[accessLevel]); }
+                    } catch (ex) { _handleError(ex, onerror); }
                 };
 
-                _getDatabase(ds, function (db) {
-                    if (db.objectStoreNames.contains(ds.StoreName)) { get(db); }
+                _getDatabase(function (db) {
+                    if (db.objectStoreNames.contains(osName)) { get(db); }
                     else {
-                        _createObjectStore(ds, db, function () {
+                        _createObjectStore(db, function () {
                             get(db);
                         }, onerror);
                     }
@@ -75,35 +78,77 @@
             }
         };
 
-        DataStore.prototype.getAll = function (onsuccess, onerror) {
-            var getAll = function (os) {
-                var gotOS = "";
-            };
-
-            _getObjectStore(this, getAll, onerror, IDBTransaction.READ_ONLY);
+        function _handleError(err, onerror) {
+            console.log(err);
+            if (_exists(onerror)) { onerror(err); }
         };
 
-        DataStore.prototype.save = function (key, value, onsuccess, onerror) {
+        /*DataStore.prototype.getAll = function (onsuccess, onerror) {
+        var getAll = function (os) {
+        var gotOS = "";
+        };
+
+        _getObjectStore(this, getAll, onerror, IDBTransaction.READ_ONLY);
+        };*/
+
+        ixdb.get = function (key, onsuccess, onerror) {
+            var get = function (os) {
+                try {
+                    var val = os.get(key);
+                    if (_exists(onsuccess)) { onsuccess(val); }
+                } catch (ex) {
+                    _handleError(ex, onerror);
+                }
+            };
+
+            _getObjectStore(get, onerror, IDBTransaction.READ_ONLY);
+        };
+
+        ixdb.set = function (key, value, onsuccess, onerror) {
             var save = function (os) {
                 var req = os.put(value, key);
                 req.onsuccess = function (e) {
-                    if (Object.exists(onsuccess)) {
+                    if (_exists(onsuccess)) {
                         onsuccess();
                     }
                 }
                 req.onerror = function (e) {
-                    if (Object.exists(onerror)) {
-                        onerror();
-                    }
+                    _handleError(e, onerror);
                 }
             };
 
-            _getObjectStore(this, save, onerror, IDBTransaction.READ_WRITE);
+            _getObjectStore(save, onerror, IDBTransaction.READ_WRITE);
         };
 
-        return DataStore;
+        return ixdb;
     })();
 
-    this.DataStore = DataStore;
+    gazel.get = function (key, onsuccess, onerror) {
+        /// <summary>Description</summary>
+        /// <param name="key" type="String">Description</param>
+        /// <param name="onsuccess" type="Function">Function to be called on success.</param>
+        /// <param name="onerror" type="Function">Function to be called on error.</param>
+        ixdb.get(key, onsuccess, onerror);
+    };
+
+    gazel.set = function (key, value, onsuccess, onerror) {
+        /// <summary>Description</summary>
+        /// <param name="key" type="String">Description</param>
+        /// <param name="value" type="Object">Description</param>
+        /// <param name="onsuccess" type="Function">Function to be called on success.</param>
+        /// <param name="onerror" type="Function">Function to be called on error.</param>
+
+        ixdb.set(key, value, onsuccess, onerror);
+    };
+
+    gazel.incr = function (key, by, onsuccess, onerror) {
+        /// <summary>Description</summary>
+        /// <param name="key" type="String">Description</param>
+        /// <param name="by" type="Integer">Description</param>
+        /// <param name="onsuccess" type="Function">Function to be called on success.</param>
+        /// <param name="onerror" type="Function">Function to be called on error.</param>
+    };
+
+    this.gazel = gazel;
 
 }).call(this);
