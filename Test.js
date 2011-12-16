@@ -35,11 +35,48 @@ asyncTest("Testing normal get.", function () {
     expect(1);
 
     gazel.get("foo", function (val) {
-        strictEquals(val, "bar", "Bar is bar.");
+        strictEqual(val, "bar", "Bar is bar.");
         start();
     }, function () {
         ok(false, "Error callback.");
         start();
     });
+});
 
+asyncTest("Test get speed.", function () {
+    var before, after;
+
+    expect(2);
+
+    var onsuccess = function (val) {
+        after = new Date();
+        var diff = after - before;
+        notEqual(before, after, "If the dates are the same something went wrong.");
+        ok(diff < 10, "The difference between the times should be less than 10 milliseconds");
+        start();
+    };
+    var onerror = function (e) {
+        ok(false, e);
+        start();
+    };
+
+    before = new Date();
+    gazel.get("foo", onsuccess, onerror);
+});
+
+asyncTest("Test set speed.", function () {
+    var before, after;
+    expect(1);
+
+    var onsuccess = function () {
+        after = new Date();
+        var diff = after - before;
+        ok(diff < 10, "A set should take less than 10 milliseconds.");
+    };
+    var onerror = function () {
+        ok(false, e);
+    };
+
+    before = new Date();
+    gazel.set("foo", "bar", onsuccess, onerror);
 });

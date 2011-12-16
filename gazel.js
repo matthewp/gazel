@@ -19,7 +19,6 @@
     var ixdb = ixdb || {};
     ixdb = (function () {
         var osName = "gazelos";
-        ixdb.os = {};
 
         function _getDatabase(onsuccess, onerror) {
             if (_exists(ixdb._db) && _exists(onsuccess)) {
@@ -55,27 +54,23 @@
         };
 
         function _getObjectStore(onsuccess, onerror, accessLevel) {
-            if (_exists(ixdb.os[accessLevel]) && _exists(onsuccess)) {
-                onsuccess(ixdb.os[accessLevel]);
-            } else {
-                var get = function (db) {
-                    var tx = db.transaction([osName], accessLevel);
-                    tx.onerror = onerror;
-                    try {
-                        ixdb.os[accessLevel] = tx.objectStore(osName);
-                        if (_exists(onsuccess)) { onsuccess(ixdb.os[accessLevel]); }
-                    } catch (ex) { _handleError(ex, onerror); }
-                };
+            var get = function (db) {
+                var tx = db.transaction([osName], accessLevel);
+                tx.onerror = onerror;
+                try {
+                    ixdb.os[accessLevel] = tx.objectStore(osName);
+                    if (_exists(onsuccess)) { onsuccess(ixdb.os[accessLevel]); }
+                } catch (ex) { _handleError(ex, onerror); }
+            };
 
-                _getDatabase(function (db) {
-                    if (db.objectStoreNames.contains(osName)) { get(db); }
-                    else {
-                        _createObjectStore(db, function () {
-                            get(db);
-                        }, onerror);
-                    }
-                }, onerror);
-            }
+            _getDatabase(function (db) {
+                if (db.objectStoreNames.contains(osName)) { get(db); }
+                else {
+                    _createObjectStore(db, function () {
+                        get(db);
+                    }, onerror);
+                }
+            }, onerror);
         };
 
         function _handleError(err, onerror) {
@@ -83,25 +78,27 @@
             if (_exists(onerror)) { onerror(err); }
         };
 
-        /*DataStore.prototype.getAll = function (onsuccess, onerror) {
-        var getAll = function (os) {
-        var gotOS = "";
-        };
-
-        _getObjectStore(this, getAll, onerror, IDBTransaction.READ_ONLY);
-        };*/
-
         ixdb.get = function (key, onsuccess, onerror) {
-            var get = function (os) {
-                try {
-                    var val = os.get(key);
-                    if (_exists(onsuccess)) { onsuccess(val); }
-                } catch (ex) {
-                    _handleError(ex, onerror);
-                }
+            var save = function (db) {
+                var req = db.transaction(osName).objectStore(osName).get(key);
+                req.onerror = function (e) {
+                    _handleError(e, onerror);
+                };
+                req.onsuccess = function (e) {
+                    if (_exists(onsuccess)) {
+                        onsuccess(e.target.result);
+                    }
+                };
             };
 
-            _getObjectStore(get, onerror, IDBTransaction.READ_ONLY);
+            _getDatabase(function (db) {
+                if (db.objectStoreNames.contains(osName)) { save(db); }
+                else {
+                    _createObjectStore(db, function() {
+                        save(db);
+                    }, onerror);
+                }
+            }, onerror);
         };
 
         ixdb.set = function (key, value, onsuccess, onerror) {
