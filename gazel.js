@@ -94,7 +94,7 @@
             _getDatabase(function (db) {
                 if (db.objectStoreNames.contains(osName)) { save(db); }
                 else {
-                    _createObjectStore(db, function() {
+                    _createObjectStore(db, function () {
                         save(db);
                     }, onerror);
                 }
@@ -120,31 +120,80 @@
         return ixdb;
     })();
 
-    gazel.get = function (key, onsuccess, onerror) {
-        /// <summary>Description</summary>
-        /// <param name="key" type="String">Description</param>
-        /// <param name="onsuccess" type="Function">Function to be called on success.</param>
-        /// <param name="onerror" type="Function">Function to be called on error.</param>
-        ixdb.get(key, onsuccess, onerror);
-    };
+    var Queue = function () { }
+    Queue.prototype = (function () {
+        return {
+            items: [],
+            results: [],
+            add: function (action, params) {
+                this.items.push({ "action": action, "params": params });
+            },
+            flush: function () {
+                var args = Array.prototype.slice.call(arguments);
+                if (args.length > 0) { this.results.push(args); }
+                if (this.items.length > 0) {
+                    var item = this.items.shift();
+                    item.action.apply(null, item.params);
+                }
+            },
+            clear: function () {
+                this.items = [];
+                this.results = [];
+            }
+        };
+    })();
+    Queue.create = function () { return new Queue; }
 
-    gazel.set = function (key, value, onsuccess, onerror) {
-        /// <summary>Description</summary>
-        /// <param name="key" type="String">Description</param>
-        /// <param name="value" type="Object">Description</param>
-        /// <param name="onsuccess" type="Function">Function to be called on success.</param>
-        /// <param name="onerror" type="Function">Function to be called on error.</param>
+    var Client = function () { }
+    Client.prototype = (function () {
+        var events = {};
+        var onerror = function (e) {
+            var action = events["error"];
+            if (_exists(action)) {
+                action(e);
+            }
+        };
 
-        ixdb.set(key, value, onsuccess, onerror);
-    };
+        var chaining = false;
+        var queue = Queue.create();
 
-    gazel.incr = function (key, by, onsuccess, onerror) {
-        /// <summary>Description</summary>
-        /// <param name="key" type="String">Description</param>
-        /// <param name="by" type="Integer">Description</param>
-        /// <param name="onsuccess" type="Function">Function to be called on success.</param>
-        /// <param name="onerror" type="Function">Function to be called on error.</param>
-    };
+        return {
+            on: function (event, action) {
+                events[event] = action;
+            },
+
+            get: function (key, onsuccess) {
+                if (chaining) {
+                    queue.add(ixdb.get, [key, queue.flush, onerror]);
+                } else { ixdb.get(key, onsuccess, onerror); }
+            },
+
+            set: function (key, value, onsuccess) {
+                ixdb.set(key, value, onsuccess, onerror);
+            },
+
+            incr: function (key, by, onsuccess) {
+                var got = function (val) {
+                    ixdb.set(key, val + by, onsuccess, onerror);
+                };
+                ixdb.get(key, got, onerror);
+            },
+
+            multi: function () {
+                chaining = true;
+            },
+
+            exec: function (onsuccess) {
+                chaining = false;
+                queue.add(onsuccess, null);
+                queue.flush();
+            }
+        };
+    })();
+
+    gazel.create = function () {
+        return new Client;
+    }
 
     this.gazel = gazel;
 
