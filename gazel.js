@@ -16,24 +16,25 @@
     gazel.compatible = _exists(window.indexedDB) && _exists(window.localStorage)
         && _exists(window.IDBTransaction);
 
-    var ixdb = ixdb || {};
-    ixdb = (function () {
-        var osName = "gazelos";
+    var Ixdb = (function () {
+        function Ixdb(osname) {
+            this.osName = _exists(osname) ? osname : "gazelos";
+        };
 
-        function _getDatabase(onsuccess, onerror) {
-            if (_exists(ixdb._db) && _exists(onsuccess)) {
-                onsuccess(ixdb._db);
+        function _getDatabase(self, onsuccess, onerror) {
+            if (_exists(self._db) && _exists(onsuccess)) {
+                onsuccess(self._db);
             } else {
                 var req = window.indexedDB.open(gazel.dbName);
                 req.onsuccess = function (e) {
-                    ixdb._db = e.target.result;
-                    if (_exists(onsuccess)) { onsuccess(ixdb._db); }
+                    _db = e.target.result;
+                    if (_exists(onsuccess)) { onsuccess(self._db); }
                 };
                 req.onerror = onerror;
             }
         };
 
-        function _createObjectStore(db, onsuccess, onerror) {
+        function _createObjectStore(self, db, onsuccess, onerror) {
             try {
                 var req = db.setVersion(gazel.version);
                 req.onerror = function (e) {
@@ -48,25 +49,25 @@
                     tx.oncomplete = function (e) {
                         if (_exists(onsuccess)) { onsuccess(store); }
                     };
-                    store = db.createObjectStore(osName);
+                    store = db.createObjectStore(self.osName);
                 };
             } catch (ex) { _handleError(ex, onerror); }
         };
 
-        function _getObjectStore(onsuccess, onerror, accessLevel) {
+        function _getObjectStore(self, onsuccess, onerror, accessLevel) {
             var get = function (db) {
-                var tx = db.transaction([osName], accessLevel);
+                var tx = db.transaction([self.osName], accessLevel);
                 tx.onerror = onerror;
                 try {
-                    ixdb.os[accessLevel] = tx.objectStore(osName);
-                    if (_exists(onsuccess)) { onsuccess(ixdb.os[accessLevel]); }
+                    var os = tx.objectStore(self.osName);
+                    if (_exists(onsuccess)) { onsuccess(os); }
                 } catch (ex) { _handleError(ex, onerror); }
             };
 
-            _getDatabase(function (db) {
-                if (db.objectStoreNames.contains(osName)) { get(db); }
+            _getDatabase(self, function (db) {
+                if (db.objectStoreNames.contains(self.osName)) { get(db); }
                 else {
-                    _createObjectStore(db, function () {
+                    _createObjectStore(self, db, function () {
                         get(db);
                     }, onerror);
                 }
@@ -78,47 +79,49 @@
             if (_exists(onerror)) { onerror(err); }
         };
 
-        ixdb.get = function (key, onsuccess, onerror) {
-            var save = function (db) {
-                var req = db.transaction(osName).objectStore(osName).get(key);
-                req.onerror = function (e) {
-                    _handleError(e, onerror);
+        return {
+            get: function (key, onsuccess, onerror) {
+                var self = this;
+                var save = function (db) {
+                    var req = db.transaction(self.osName).objectStore(self.osName).get(key);
+                    req.onerror = function (e) {
+                        _handleError(e, onerror);
+                    };
+                    req.onsuccess = function (e) {
+                        if (_exists(onsuccess)) {
+                            onsuccess(e.target.result);
+                        }
+                    };
                 };
-                req.onsuccess = function (e) {
-                    if (_exists(onsuccess)) {
-                        onsuccess(e.target.result);
+
+                _getDatabase(self, function (db) {
+                    if (db.objectStoreNames.contains(self.osName)) { save(db); }
+                    else {
+                        _createObjectStore(self, db, function () {
+                            save(db);
+                        }, onerror);
+                    }
+                }, onerror);
+            },
+
+            set: function (key, value, onsuccess, onerror) {
+                var save = function (os) {
+                    var req = os.put(value, key);
+                    req.onsuccess = function (e) {
+                        if (_exists(onsuccess)) {
+                            onsuccess();
+                        }
+                    }
+                    req.onerror = function (e) {
+                        _handleError(e, onerror);
                     }
                 };
-            };
 
-            _getDatabase(function (db) {
-                if (db.objectStoreNames.contains(osName)) { save(db); }
-                else {
-                    _createObjectStore(db, function () {
-                        save(db);
-                    }, onerror);
-                }
-            }, onerror);
-        };
-
-        ixdb.set = function (key, value, onsuccess, onerror) {
-            var save = function (os) {
-                var req = os.put(value, key);
-                req.onsuccess = function (e) {
-                    if (_exists(onsuccess)) {
-                        onsuccess();
-                    }
-                }
-                req.onerror = function (e) {
-                    _handleError(e, onerror);
-                }
-            };
-
-            _getObjectStore(save, onerror, IDBTransaction.READ_WRITE);
-        };
-
-        return ixdb;
+                _getObjectStore(this, save, onerror, IDBTransaction.READ_WRITE);
+            }
+        }
     })();
+    Ixdb.create = function () { return new Ixdb; }
 
     var Queue = function () { }
     Queue.prototype = (function () {
@@ -153,6 +156,8 @@
                 action(e);
             }
         };
+
+        var ixdb = Ixdb.create();
 
         var chaining = false;
         var queue = Queue.create();
