@@ -1,10 +1,10 @@
 /// <reference path="gazel.js"/>
 
 var _exists = function(obj) {
-    return typeof obj !== "undefined" && obj !== null;
+    return typeof obj !== "undefined" && obj != null;
 };
 
-var client = gazel.create();
+var client = Gazel.create();
 
 test("First test", function () {
 

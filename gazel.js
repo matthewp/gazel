@@ -130,83 +130,84 @@
 
     Ixdb.create = function () { return new Ixdb; };
 
-    var Queue = function () { }
-    Queue.prototype = (function () {
-        return {
-            items: [],
-            results: [],
-            add: function (action, params) {
+    var Queue = (function () {
+	    function Queue() { };
+
+            Queue.prototype.items = [];
+            Queue.prototype.results = [];
+            Queue.prototype.add = function (action, params) {
                 this.items.push({ "action": action, "params": params });
-            },
-            flush: function () {
+            };
+            Queue.prototype.flush = function () {
                 var args = Array.prototype.slice.call(arguments);
                 if (args.length > 0) { this.results.push(args); }
                 if (this.items.length > 0) {
                     var item = this.items.shift();
                     item.action.apply(null, item.params);
                 }
-            },
-            clear: function () {
+            };
+            Queue.prototype.clear = function () {
                 this.items = [];
                 this.results = [];
-            }
-        };
+            };
+
+        return Queue;
     })();
     Queue.create = function () { return new Queue; }
 
-    var Client = function () { }
-    Client.prototype = (function () {
-        var events = {};
-        var onerror = function (e) {
-            var action = events["error"];
-            if (exists(action)) {
-                action(e);
-            }
-        };
+    var Client = (function () {
+	function Client() {
+	    var self = this;
+            this._events = {};
+            this._onerror = function (e) {
+                var action = self.events["error"];
+                if (exists(action)) {
+                    action(e);
+                }
+            };
 
-        var ixdb = Ixdb.create();
+            this._ixdb = Ixdb.create();
 
-        var chaining = false;
-        var queue = Queue.create();
+            this._chaining = false;
+            this._queue = Queue.create();
+	};
 
-        return {
-            on: function (event, action) {
-                events[event] = action;
+        Client.prototype.on = function (event, action) {
+                this._events[event] = action;
+            };
+
+        Client.prototype.get = function (key, onsuccess) {
+                if (this._chaining) {
+                    this._queue.add(this._ixdb.get, [key, this._queue.flush, this._onerror]);
+                } else { this._ixdb.get(key, onsuccess, this._onerror); }
             },
 
-            get: function (key, onsuccess) {
-                if (chaining) {
-                    queue.add(ixdb.get, [key, queue.flush, onerror]);
-                } else { ixdb.get(key, onsuccess, onerror); }
-            },
+        Client.prototype.set = function (key, value, onsuccess) {
+                this._ixdb.set(key, value, onsuccess, this._onerror);
+            };
 
-            set: function (key, value, onsuccess) {
-                ixdb.set(key, value, onsuccess, onerror);
-            },
-
-            incr: function (key, by, onsuccess) {
+        Client.prototype.incr = function (key, by, onsuccess) {
+		var self = this;
                 var got = function (val) {
-                    ixdb.set(key, val + by, onsuccess, onerror);
+                    self._ixdb.set(key, val + by, onsuccess, self._onerror);
                 };
-                ixdb.get(key, got, onerror);
-            },
+                this._ixdb.get(key, got, this._onerror);
+            };
 
-            multi: function () {
-                chaining = true;
-            },
+        Client.prototype.multi = function () {
+                this._chaining = true;
+            };
 
-            exec: function (onsuccess) {
-                chaining = false;
-                queue.add(onsuccess, null);
-                queue.flush();
-            }
-        };
+        Client.prototype.exec = function (onsuccess) {
+                this._chaining = false;
+                this._queue.add(onsuccess, null);
+                this._queue.flush();
+            };
+        
+        return Client;
     })();
+    gazel.create = function () { return new Client; }
 
-    gazel.create = function () {
-        return new Client;
-    }
-
-    this.gazel = gazel;
+    this.Gazel = gazel;
 
 }).call(this);
