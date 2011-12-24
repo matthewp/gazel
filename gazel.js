@@ -2,7 +2,7 @@
     'use strict';
 
     var exists = function (obj) {
-        return typeof obj !== "undefined" && obj !== null;
+        return typeof obj !== "undefined" && obj != null;
     };
 
     var gazel = gazel || {};
@@ -27,7 +27,7 @@
             } else {
                 var req = window.indexedDB.open(gazel.dbName);
                 req.onsuccess = function (e) {
-                    _db = e.target.result;
+                    self._db = e.target.result;
                     if (exists(onsuccess)) { onsuccess(self._db); }
                 };
                 req.onerror = onerror;
@@ -76,7 +76,13 @@
 
         function _handleError(err, onerror) {
             console.log(err);
-            if (exists(onerror)) { onerror(err); }
+	    if(exists(onerror)) {
+	        if(typeof err === "Error") { onerror(err); }
+	        else {
+		    var mErr = new Error(err);
+		    onerror(mErr);
+		}
+	    }
         };
            
 	Ixdb.prototype.get = function (key, onsuccess, onerror) {
