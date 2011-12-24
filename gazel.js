@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var _exists = function (obj) {
+    var exists = function (obj) {
         return typeof obj !== "undefined" && obj !== null;
     };
 
@@ -13,22 +13,22 @@
         || window.msIndexedDB || window.webkitIndexedDB || window.oIndexedDB;
     window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction;
 
-    gazel.compatible = _exists(window.indexedDB) && _exists(window.localStorage)
-        && _exists(window.IDBTransaction);
+    gazel.compatible = exists(window.indexedDB) && exists(window.localStorage)
+        && exists(window.IDBTransaction);
 
     var Ixdb = (function () {
         function Ixdb(osname) {
-            this.osName = _exists(osname) ? osname : "gazelos";
+            this.osName = exists(osname) ? osname : "gazelos";
         };
 
         function _getDatabase(self, onsuccess, onerror) {
-            if (_exists(self._db) && _exists(onsuccess)) {
+            if (exists(self._db) && exists(onsuccess)) {
                 onsuccess(self._db);
             } else {
                 var req = window.indexedDB.open(gazel.dbName);
                 req.onsuccess = function (e) {
                     _db = e.target.result;
-                    if (_exists(onsuccess)) { onsuccess(self._db); }
+                    if (exists(onsuccess)) { onsuccess(self._db); }
                 };
                 req.onerror = onerror;
             }
@@ -47,7 +47,7 @@
                         _handleError(e.message, onerror);
                     };
                     tx.oncomplete = function (e) {
-                        if (_exists(onsuccess)) { onsuccess(store); }
+                        if (exists(onsuccess)) { onsuccess(store); }
                     };
                     store = db.createObjectStore(self.osName);
                 };
@@ -60,7 +60,7 @@
                 tx.onerror = onerror;
                 try {
                     var os = tx.objectStore(self.osName);
-                    if (_exists(onsuccess)) { onsuccess(os); }
+                    if (exists(onsuccess)) { onsuccess(os); }
                 } catch (ex) { _handleError(ex, onerror); }
             };
 
@@ -76,11 +76,10 @@
 
         function _handleError(err, onerror) {
             console.log(err);
-            if (_exists(onerror)) { onerror(err); }
+            if (exists(onerror)) { onerror(err); }
         };
-
-        return {
-            get: function (key, onsuccess, onerror) {
+           
+	Ixdb.prototype.get = function (key, onsuccess, onerror) {
                 var self = this;
                 var save = function (db) {
                     var req = db.transaction(self.osName).objectStore(self.osName).get(key);
@@ -88,7 +87,7 @@
                         _handleError(e, onerror);
                     };
                     req.onsuccess = function (e) {
-                        if (_exists(onsuccess)) {
+                        if (exists(onsuccess)) {
                             onsuccess(e.target.result);
                         }
                     };
@@ -102,13 +101,13 @@
                         }, onerror);
                     }
                 }, onerror);
-            },
+            };
 
-            set: function (key, value, onsuccess, onerror) {
+	Ixdb.prototype.set = function (key, value, onsuccess, onerror) {
                 var save = function (os) {
                     var req = os.put(value, key);
                     req.onsuccess = function (e) {
-                        if (_exists(onsuccess)) {
+                        if (exists(onsuccess)) {
                             onsuccess();
                         }
                     }
@@ -118,10 +117,12 @@
                 };
 
                 _getObjectStore(this, save, onerror, IDBTransaction.READ_WRITE);
-            }
-        }
+            };
+
+	return Ixdb;
     })();
-    Ixdb.create = function () { return new Ixdb; }
+
+    Ixdb.create = function () { return new Ixdb; };
 
     var Queue = function () { }
     Queue.prototype = (function () {
@@ -152,7 +153,7 @@
         var events = {};
         var onerror = function (e) {
             var action = events["error"];
-            if (_exists(action)) {
+            if (exists(action)) {
                 action(e);
             }
         };
