@@ -1,12 +1,10 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
-                    "http://www.w3.org/TR/html4/loose.dtd">
-<html>
+<!DOCTYPE html />
+<html lang="en">
 <head>
+  <title>Gazel testing suite.</title>
   <script src="http://code.jquery.com/jquery-latest.js"></script>
   <link rel="stylesheet" href="http://code.jquery.com/qunit/git/qunit.css" type="text/css" media="screen" />
 <script type="text/javascript" src="http://code.jquery.com/qunit/git/qunit.js"></script>
-<script src="gazel.js"></script>
-<script src="test.js"></script>  
 </head>
 <body>
   <h1 id="qunit-header">QUnit example</h1>
@@ -15,5 +13,26 @@
  <h2 id="qunit-userAgent"></h2>
  <ol id="qunit-tests"></ol>
  <div id="qunit-fixture">test markup, will be hidden</div>
+ <script src="scripts/yepnope.1.0.2-min.js"></script>
+ <script defer="defer">
+     yepnope({
+         load: 'gazel.js',
+         callback: function (url, result, key) {
+             if (Gazel && Gazel.compatible) {
+                 var tests = ['tests/main-test.js', 'tests/chaining-test.js'];
+                 yepnope({
+                    test: true,
+                    yep: tests
+                 });
+             } else {
+                 var elem = document.createElement("div");
+                 elem.innerText = "This browser is not compatible :-(";
+                 var body = document.getElementsByTagName("body")[0];
+                 body.innerHTML = "";
+                 body.appendChild(elem);
+             }
+         }
+     });
+ </script>
 </body>
 </html>

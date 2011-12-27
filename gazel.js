@@ -76,88 +76,90 @@
 
         function _handleError(err, onerror) {
             console.log(err);
-	    if(exists(onerror)) {
-	        if(typeof err === "Error") { onerror(err); }
-	        else {
-		    var mErr = new Error(err);
-		    onerror(mErr);
-		}
-	    }
+            if (exists(onerror)) {
+                if (typeof err === "Error") { onerror(err); }
+                else {
+                    var mErr = new Error(err);
+                    onerror(mErr);
+                }
+            }
         };
-           
-	Ixdb.prototype.get = function (key, onsuccess, onerror) {
-                var self = this;
-                var save = function (db) {
-                    var req = db.transaction(self.osName).objectStore(self.osName).get(key);
-                    req.onerror = function (e) {
-                        _handleError(e, onerror);
-                    };
-                    req.onsuccess = function (e) {
-                        if (exists(onsuccess)) {
-                            onsuccess(e.target.result);
-                        }
-                    };
+
+        Ixdb.prototype.get = function (key, onsuccess, onerror) {
+            var self = this;
+            var save = function (db) {
+                var req = db.transaction(self.osName).objectStore(self.osName).get(key);
+                req.onerror = function (e) {
+                    _handleError(e, onerror);
                 };
-
-                _getDatabase(self, function (db) {
-                    if (db.objectStoreNames.contains(self.osName)) { save(db); }
-                    else {
-                        _createObjectStore(self, db, function () {
-                            save(db);
-                        }, onerror);
-                    }
-                }, onerror);
-            };
-
-	Ixdb.prototype.set = function (key, value, onsuccess, onerror) {
-                var save = function (os) {
-                    var req = os.put(value, key);
-                    req.onsuccess = function (e) {
-                        if (exists(onsuccess)) {
-                            onsuccess();
-                        }
-                    }
-                    req.onerror = function (e) {
-                        _handleError(e, onerror);
+                req.onsuccess = function (e) {
+                    if (exists(onsuccess)) {
+                        onsuccess(e.target.result);
                     }
                 };
-
-                _getObjectStore(this, save, onerror, IDBTransaction.READ_WRITE);
             };
 
-	return Ixdb;
+            _getDatabase(self, function (db) {
+                if (db.objectStoreNames.contains(self.osName)) { save(db); }
+                else {
+                    _createObjectStore(self, db, function () {
+                        save(db);
+                    }, onerror);
+                }
+            }, onerror);
+        };
+
+        Ixdb.prototype.set = function (key, value, onsuccess, onerror) {
+            var save = function (os) {
+                var req = os.put(value, key);
+                req.onsuccess = function (e) {
+                    if (exists(onsuccess)) {
+                        onsuccess();
+                    }
+                }
+                req.onerror = function (e) {
+                    _handleError(e, onerror);
+                }
+            };
+
+            _getObjectStore(this, save, onerror, IDBTransaction.READ_WRITE);
+        };
+
+        return Ixdb;
     })();
 
     Ixdb.create = function () { return new Ixdb; };
 
     var Queue = (function () {
-	    function Queue() { };
+        function Queue(ctx) {
+            this.ctx = ctx;
+        };
 
-            Queue.prototype.items = [];
-            Queue.prototype.results = [];
-            Queue.prototype.add = function (action, params) {
-                this.items.push({ "action": action, "params": params });
-            };
-            Queue.prototype.flush = function () {
-                var args = Array.prototype.slice.call(arguments);
-                if (args.length > 0) { this.results.push(args); }
-                if (this.items.length > 0) {
-                    var item = this.items.shift();
-                    item.action.apply(null, item.params);
-                }
-            };
-            Queue.prototype.clear = function () {
-                this.items = [];
-                this.results = [];
-            };
+        Queue.prototype.items = [];
+        Queue.prototype.results = [];
+        Queue.prototype.add = function (action, params) {
+            this.items.push({ "action": action, "params": params });
+        };
+        Queue.prototype.flush = function () {
+            var args = Array.prototype.slice.call(arguments);
+            if (args.length > 0) { this.results.push(args); }
+            if (this.items.length > 0) {
+                var item = this.items.shift();
+                item.action.apply(this.ctx, item.params);
+            }
+        };
+        Queue.prototype.clear = function () {
+            this.items = [];
+            this.results = [];
+        };
 
         return Queue;
     })();
-    Queue.create = function () { return new Queue; }
+    Queue.create = function (ctx) { return new Queue(ctx); }
 
     var Client = (function () {
-	function Client() {
-	    var self = this;
+        function Client() {
+            var self = this;
             this._events = {};
             this._onerror = function (e) {
                 var action = self.events["error"];
@@ -169,41 +171,46 @@
             this._ixdb = Ixdb.create();
 
             this._chaining = false;
-            this._queue = Queue.create();
-	};
+            this._queue = Queue.create(this);
+        };
 
         Client.prototype.on = function (event, action) {
-                this._events[event] = action;
-            };
+            this._events[event] = action;
+        };
 
         Client.prototype.get = function (key, onsuccess) {
-                if (this._chaining) {
-                    this._queue.add(this._ixdb.get, [key, this._queue.flush, this._onerror]);
-                } else { this._ixdb.get(key, onsuccess, this._onerror); }
-            },
+            if (this._chaining) {
+                this._queue.add(this._ixdb.get, [key, this._queue.flush, this._onerror]);
+                return this;
+            } else { this._ixdb.get(key, onsuccess, this._onerror); }
+        },
 
         Client.prototype.set = function (key, value, onsuccess) {
-                this._ixdb.set(key, value, onsuccess, this._onerror);
-            };
+            if (this._chaining) {
+                this._queue.add(this._ixdb.set, [key, value, this._queue.flush, this._onerror]);
+                return this;
+            } else { this._ixdb.set(key, value, onsuccess, this._onerror); }
+        };
 
         Client.prototype.incr = function (key, by, onsuccess) {
-		var self = this;
-                var got = function (val) {
-                    self._ixdb.set(key, val + by, onsuccess, self._onerror);
-                };
-                this._ixdb.get(key, got, this._onerror);
+            var self = this;
+            var got = function (val) {
+                self._ixdb.set(key, val + by, onsuccess, self._onerror);
             };
+            this._ixdb.get(key, got, this._onerror);
+        };
 
         Client.prototype.multi = function () {
-                this._chaining = true;
-            };
+            this._chaining = true;
+            return this;
+        };
 
         Client.prototype.exec = function (onsuccess) {
-                this._chaining = false;
-                this._queue.add(onsuccess, null);
-                this._queue.flush();
-            };
-        
+            this._chaining = false;
+            this._queue.add(onsuccess, null);
+            this._queue.flush();
+        };
+
         return Client;
     })();
     gazel.create = function () { return new Client; }
