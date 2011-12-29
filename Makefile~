@@ -4,11 +4,8 @@ srcdir = src/
 builddir = build/
 
 # Create the list of modules
-modules =   ${srcdir}setup.js\
-	    ${srcdir}ixdb.js\
-	    ${srcdir}queue.js\
-	    ${srcdir}client.js\
-            ${srcdir}gazel.js
+modules =   ${srcdir}gazel.js\
+            ${srcdir}ixdb.js       
 
 # Compress all of the modules into gazel.js
 gazel.js: ${modules}

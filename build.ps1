@@ -2,8 +2,11 @@ $outfile = "build\gazel.js"
 $minfile = "build\gazel.min.js"
 
 $files = @(
-	'src\gazel.js',
-	'src\ixdb.js'
+	'src\setup.js',
+	'src\ixdb.js',
+	'src\queue.js',
+	'src\client.js',
+	'src\gazel.js'
 )
 
 "(function () {" > $outfile
