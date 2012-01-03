@@ -24,4 +24,5 @@ var Queue = (function () {
     return Queue;
 })();
 
-Queue.create = function (ctx) { return new Queue(ctx); }
+Queue.create = function (ctx) { return new Queue(ctx); };
+

@@ -5,6 +5,7 @@ gazel.dbName = "gazeldb";
 gazel.compatible = exists(window.indexedDB) && exists(window.localStorage)
     && exists(window.IDBTransaction);
 
-gazel.create = function () { return new Client; }
+gazel.create = function () { return new Client; };
 
 this.Gazel = gazel;
+

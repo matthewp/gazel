@@ -7,3 +7,4 @@ var exists = function (obj) {
 window.indexedDB = window.indexedDB || window.mozIndexedDB
         || window.msIndexedDB || window.webkitIndexedDB || window.oIndexedDB;
 window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction;
+
