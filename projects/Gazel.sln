@@ -3,14 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "JavaScript", "JavaScript", "{0E9BF424-95E9-4B10-9D1F-F05EC6BA1563}"
 	ProjectSection(SolutionItems) = preProject
-		..\src\client.js = ..\src\client.js
 		..\src\dbfunctions.js = ..\src\dbfunctions.js
 		..\src\gazel.js = ..\src\gazel.js
-		..\src\gazel2.js = ..\src\gazel2.js
-		..\src\ixdb.js = ..\src\ixdb.js
-		..\src\promise.js = ..\src\promise.js
+		..\src\handlers.js = ..\src\handlers.js
 		..\src\queue.js = ..\src\queue.js
 		..\src\setup.js = ..\src\setup.js
+		..\src\transactions.js = ..\src\transactions.js
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Html", "Html", "{C61BFD87-A4F9-4D12-B88E-53E733918161}"
@@ -28,6 +26,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{CAD71C61
 	ProjectSection(SolutionItems) = preProject
 		..\build.ps1 = ..\build.ps1
 		..\build\gazel.js = ..\build\gazel.js
+		..\Makefile = ..\Makefile
 	EndProjectSection
 EndProject
 Global
