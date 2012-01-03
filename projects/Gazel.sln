@@ -4,8 +4,11 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "JavaScript", "JavaScript", "{0E9BF424-95E9-4B10-9D1F-F05EC6BA1563}"
 	ProjectSection(SolutionItems) = preProject
 		..\src\client.js = ..\src\client.js
+		..\src\dbfunctions.js = ..\src\dbfunctions.js
 		..\src\gazel.js = ..\src\gazel.js
+		..\src\gazel2.js = ..\src\gazel2.js
 		..\src\ixdb.js = ..\src\ixdb.js
+		..\src\promise.js = ..\src\promise.js
 		..\src\queue.js = ..\src\queue.js
 		..\src\setup.js = ..\src\setup.js
 	EndProjectSection

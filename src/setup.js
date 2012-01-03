@@ -1,4 +1,5 @@
 'use strict';
+var gazel = gazel || {};
 
 var exists = function (obj) {
     return typeof obj !== "undefined" && obj != null;
