@@ -13,7 +13,7 @@ function openDatabase(osName, onsuccess) {
 };
 
 function openReadable(osName, onsuccess) {
-    openDatabase(function (db) {
+    openDatabase(osName, function (db) {
         var tx = db.transaction([osName], IDBTransaction.READ);
         tx.onerror = error;
         complete(onsuccess, [tx]);
@@ -21,7 +21,7 @@ function openReadable(osName, onsuccess) {
 };
 
 function openWritable(osName, onsuccess) {
-    openDatabase(function (db) {
+    openDatabase(osName, function (db) {
         var tx = db.transaction([osName], IDBTransaction.READ_WRITE);
         tx.onerror = error;
         complete(onsuccess, [tx]);

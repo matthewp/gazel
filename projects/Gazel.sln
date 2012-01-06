@@ -8,6 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "JavaScript", "JavaScript", 
 		..\src\handlers.js = ..\src\handlers.js
 		..\src\queue.js = ..\src\queue.js
 		..\src\setup.js = ..\src\setup.js
+		..\src\transaction.js = ..\src\transaction.js
 		..\src\transactions.js = ..\src\transactions.js
 	EndProjectSection
 EndProject
@@ -18,8 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Html", "Html", "{C61BFD87-A
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{4DF80D9C-D557-43AF-B396-7C47CBA19480}"
 	ProjectSection(SolutionItems) = preProject
-		tests\chaining-test.js = tests\chaining-test.js
-		tests\main-test.js = tests\main-test.js
+		..\tests\chaining-test.js = ..\tests\chaining-test.js
+		..\tests\main-test.js = ..\tests\main-test.js
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{CAD71C61-034F-4EE3-B04F-2BBC95C4CB8A}"

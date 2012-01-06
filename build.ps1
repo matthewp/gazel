@@ -3,9 +3,10 @@ $minfile = "build\gazel.min.js"
 
 $files = @(
 	'src\setup.js',
-	'src\ixdb.js',
+	'src\handlers.js',
+	'src\dbfunctions.js',
 	'src\queue.js',
-	'src\client.js',
+	'src\transactions.js',
 	'src\gazel.js'
 )
 

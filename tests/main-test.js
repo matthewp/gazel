@@ -1,5 +1,3 @@
-/// <reference path="gazel.js"/>
-
 (function () {
     'use strict';
 
@@ -9,7 +7,7 @@
         return typeof obj !== "undefined" && obj != null;
     };
 
-    var client = Gazel.create();
+    var client = gazel;
     client.on("error", function (e) {
         ok(false, "Failed.");
         start();
@@ -26,7 +24,7 @@
     test("Testing reference correct.", function () {
         expect(1);
 
-        ok(_exists(Gazel), "gazel object exists.");
+        ok(_exists(gazel), "gazel object exists.");
     });
 
     asyncTest("Testing normal set.", function () {

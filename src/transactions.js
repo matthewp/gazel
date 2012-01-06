@@ -1,7 +1,10 @@
 gazel.multi = function () {
-    // TODO start of a transaction block.
+    // Let gazel know that we are in a multi.
+    gazel._multi = true;
 };
 
 gazel.exec = function (complete) {
-    // TODO finalize the execution stack.
+    // Finalize the execution stack.
+    gazel._queue.complete = complete;
+    gazel._queue.flush();
 };

@@ -1,5 +1,5 @@
 function complete(func, params) {
-    if (exists(func) && typeof func === "Function") {
+    if (exists(func) && typeof func === "function") {
         func.apply(null, params);
     }
 };
