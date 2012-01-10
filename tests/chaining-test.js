@@ -13,16 +13,17 @@
         start();
     });
 
-        asyncTest("Testing chaining.", function () {
-            expect(1);
+    asyncTest("Testing chaining.", function () {
+        expect(1);
 
-            client.multi()
-                .set("one", 1)
-                .set("two", 2)
-                .set("three", 3)
-                .exec(function (result) {
-                    ok(true, "Successfully chained.");
-                    start();
-                });
-        });
+        client.multi()
+            .set("one", 1)
+            .set("two", 2)
+            .set("three", 3)
+            .get("two")
+            .exec(function (result) {
+                ok(result[3][0] === 2, "Successfully chained.");
+                start();
+            });
+    });
 })();

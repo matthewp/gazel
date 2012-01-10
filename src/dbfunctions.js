@@ -2,14 +2,14 @@ function openDatabase(osName, onsuccess) {
     var db;
 
     var req = window.indexedDB.open(gazel.dbName, gazel.version);
-    req.onsuccess = function (e) {
-        db = e.target.result;
-        complete(onsuccess, [db]);
-    };
-    req.onerror = error;
     req.onupgradeneeded = function () {
         var os = db.createObjectStore(osName);
     };
+    req.onsuccess = function (e) {
+        db = e.target.result;
+        doUpgrade(db, osName, onsuccess);
+    };
+    req.onerror = error;
 };
 
 function openReadable(osName, onsuccess) {
@@ -26,4 +26,19 @@ function openWritable(osName, onsuccess) {
         tx.onerror = error;
         complete(onsuccess, [tx]);
     });
+};
+
+function doUpgrade(db, osName, done) {
+    if (db.setVersion && Number(db.version) !== gazel.version) {
+        var req = db.setVersion(gazel.version);
+        req.onsuccess = function (e) {
+            var tx = e.target.result;
+            if (!db.objectStoreNames.contains(osName)) {
+                db.createObjectStore(osName);
+            }
+            complete(done, [db]);
+        };
+    } else {
+        complete(done, [db]);
+    }
 };

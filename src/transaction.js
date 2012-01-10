@@ -3,8 +3,9 @@ var Transaction = (function () {
 
     };
 
-})();
+    Transaction.create = function () {
 
-Transaction.create = function () {
-    
-};
+    };
+
+    return Transaction;
+})();
