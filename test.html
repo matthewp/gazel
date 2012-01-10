@@ -19,7 +19,7 @@
          load: 'build/gazel.js',
          callback: function (url, result, key) {
              if (gazel && gazel.compatible) {
-                 var tests = ['tests/main-test.js', 'tests/chaining-test.js'];
+                 var tests = ['tests/main-test.js', 'tests/chaining-test.js', 'tests/incr-test.js'];
                  yepnope({
                     test: true,
                     yep: tests

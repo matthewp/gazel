@@ -71,7 +71,7 @@ gazel.incr = function (key, by, onsuccess) {
             req.onsuccess = function (e) {
                 var value = e.target.result += by;
 
-                req = tx.objectStore(n).put(value, key)
+                req = tx.objectStore(n).put(value, key);
                 req.onerror = error;
                 req.onsuccess = function (e) {
                     complete(onsuccess, [e.target.result]);

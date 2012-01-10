@@ -1,14 +1,15 @@
-var Queue = (function () {
-    function Queue() {
-    };
+function Queue() {
 
-    Queue.prototype.items = [];
-    Queue.prototype.results = [];
-    Queue.prototype.add = function (action) {
+};
+
+Queue.prototype = {
+    items: [],
+    results: [],
+    add: function (action) {
         this.items.push(action);
-    };
-    Queue.prototype.complete = function () { };
-    Queue.prototype.flush = function () {
+    },
+    complete: function () { },
+    flush: function () {
         var args = Array.prototype.slice.call(arguments);
         if (args.length > 0) { this.results.push(args); }
         if (this.items.length > 0) {
@@ -19,15 +20,13 @@ var Queue = (function () {
             this.clear();
             this.complete(results);
         }
-    };
-    Queue.prototype.clear = function () {
+    },
+    clear: function () {
         this.items = [];
         this.results = [];
-    };
+    }
+};
 
-    Queue.create = function () {
+Queue.create = function () {
         return new Queue;
-    };
-
-    return Queue;
-})();
+};

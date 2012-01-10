@@ -20,6 +20,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{4DF80D9C-D557-43AF-B396-7C47CBA19480}"
 	ProjectSection(SolutionItems) = preProject
 		..\tests\chaining-test.js = ..\tests\chaining-test.js
+		..\tests\incr-test.js = ..\tests\incr-test.js
 		..\tests\main-test.js = ..\tests\main-test.js
 	EndProjectSection
 EndProject
