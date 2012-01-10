@@ -1,11 +1,11 @@
-var Transaction = (function () {
-    function Transaction() {
+function Transaction() {
 
-    };
+}
 
-    Transaction.create = function () {
+Transaction.prototype = {
 
-    };
+};
 
-    return Transaction;
-})();
+Transaction.create = function () {
+    return new Transaction;
+};

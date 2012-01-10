@@ -6,8 +6,8 @@ $files = @(
 	'src\handlers.js',
 	'src\dbfunctions.js',
 	'src\queue.js',
-	'src\transactions.js',
-	'src\gazel.js'
+	'src\gazel.js',
+	'src\transactions.js'
 )
 
 "(function () {" > $outfile

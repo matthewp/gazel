@@ -5,7 +5,9 @@ function complete(func, params) {
 };
 
 function error(e) {
-    gazel._events.forEach(function (action) {
-        action(e);
+    gazel._events.forEach(function (item) {
+        if (item.name.toUpperCase() === "ERROR") {
+            item.action(e);
+        }
     });
 };
