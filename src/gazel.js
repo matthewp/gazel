@@ -1,93 +1,94 @@
-gazel.version = 2;
+gazel.version = 1;
 gazel.dbName = "gazeldb";
 gazel.osName = "gazelos";
 
-gazel.compatible = exists(window.indexedDB) && exists(window.localStorage)
-    && exists(window.IDBTransaction);
+gazel.compatible = exists(window.indexedDB)
+  && exists(window.localStorage)
+  && exists(window.IDBTransaction);
 
 gazel._events = [];
 gazel._multi = false;
 gazel._queue = Queue.create();
 
 gazel.on = function (name, action) {
-    gazel._events.push({
-        name: name,
-        action: action
-    });
+  gazel._events.push({
+    name: name,
+    action: action
+  });
 
-    return gazel;
+  return gazel;
 };
 
 gazel.get = function (key, onsuccess) {
-    var get = function () {
-        var n = gazel.osName;
-        openReadable(n, function (tx) {
-            var req = tx.objectStore(n).get(key);
-            req.onerror = error;
-            req.onsuccess = function (e) {
-                complete(onsuccess, [e.target.result]);
-            };
-        });
-    };
+  var get = function () {
+    var n = gazel.osName;
+    openReadable(n, function (tx) {
+      var req = tx.objectStore(n).get(key);
+      req.onerror = error;
+      req.onsuccess = function (e) {
+        complete(onsuccess, [e.target.result]);
+      };
+    });
+  };
 
-    if (gazel._multi) {
-        onsuccess = gazel._queue.flush.bind(gazel._queue);
-        gazel._queue.add(get);
-    } else {
-        get();
-    }
+  if (gazel._multi) {
+    onsuccess = gazel._queue.flush.bind(gazel._queue);
+    gazel._queue.add(get);
+  } else {
+    get();
+  }
 
-    return gazel;
+  return gazel;
 };
 
 gazel.set = function (key, value, onsuccess) {
-    var set = function () {
-        var n = gazel.osName;
-        openWritable(n, function (tx) {
-            var req = tx.objectStore(n).put(value, key);
-            req.onerror = error;
-            req.onsuccess = function (e) {
-                complete(onsuccess, [e.target.result]);
-            };
-        });
-    };
+  var set = function () {
+    var n = gazel.osName;
+    openWritable(n, function (tx) {
+      var req = tx.objectStore(n).put(value, key);
+      req.onerror = error;
+      req.onsuccess = function (e) {
+        complete(onsuccess, [e.target.result]);
+      };
+    });
+  };
 
-    if (gazel._multi) {
-        onsuccess = gazel._queue.flush.bind(gazel._queue);
-        gazel._queue.add(set);
-    } else {
-        set();
-    }
+  if (gazel._multi) {
+    onsuccess = gazel._queue.flush.bind(gazel._queue);
+    gazel._queue.add(set);
+  } else {
+    set();
+  }
 
-    return gazel;
+  return gazel;
 };
 
 gazel.incr = function (key, by, onsuccess) {
-    var incr = function () {
-        var n = gazel.osName;
-        openWritable(n, function (tx) {
-            var req = tx.objectStore(n).get(key);
-            req.onerror = error;
-            req.onsuccess = function (e) {
-                var value = e.target.result += by;
+  var incr = function () {
+    var n = gazel.osName;
+    openWritable(n, function (tx) {
+      var req = tx.objectStore(n).get(key);
+      req.onerror = error;
+      req.onsuccess = function (e) {
+        var value = e.target.result += by;
 
-                req = tx.objectStore(n).put(value, key);
-                req.onerror = error;
-                req.onsuccess = function (e) {
-                    complete(onsuccess, [e.target.result]);
-                };
-            };
-        });
-    };
+        req = tx.objectStore(n).put(value, key);
+        req.onerror = error;
+        req.onsuccess = function (e) {
+          complete(onsuccess, [e.target.result]);
+        };
+      };
+    });
+  };
 
-    if (gazel._multi) {
-        onsuccess = gazel._queue.flush.bind(gazel._queue);
-        gazel._queue.add(incr);
-    } else {
-        incr();
-    }
+  if (gazel._multi) {
+    onsuccess = gazel._queue.flush.bind(gazel._queue);
+    gazel._queue.add(incr);
+  } else {
+    incr();
+  }
 
-    return gazel;
+  return gazel;
 };
 
 this.gazel = gazel;
