@@ -2,15 +2,34 @@ function openDatabase(osName, onsuccess) {
   var db;
 
   var req = window.indexedDB.open(gazel.dbName, gazel.version);
-  req.onupgradeneeded = function () {
-    var os = db.createObjectStore(osName);
+  
+  req.onupgradeneeded = function (e) {
+    db = e.target.result;
+
+    if(!db.objectStoreNames.contains(osName))
+      db.createObjectStore(osName);
   };
+
   req.onsuccess = function (e) {
     db = e.target.result;
-    doUpgrade(db, osName, onsuccess);
+
+    if (db.setVersion && Number(db.version) !== gazel.version) {
+      var dbReq = db.setVersion(gazel.version);
+      dbReq.onsuccess = function (e) {
+        req.onupgradeneeded(e);
+        req.onsuccess(e);
+        
+        return;
+      };
+
+      return;
+    }
+
+    complete(onsuccess, [db]);
   };
+
   req.onerror = error;
-};
+}
 
 function openReadable(osName, onsuccess) {
   openDatabase(osName, function (db) {
@@ -18,7 +37,7 @@ function openReadable(osName, onsuccess) {
     tx.onerror = error;
     complete(onsuccess, [tx]);
   });
-};
+}
 
 function openWritable(osName, onsuccess) {
   openDatabase(osName, function (db) {
@@ -26,21 +45,4 @@ function openWritable(osName, onsuccess) {
     tx.onerror = error;
     complete(onsuccess, [tx]);
   });
-};
-
-function doUpgrade(db, osName, done) {
-  if (db.setVersion && Number(db.version) !== gazel.version) {
-    var req = db.setVersion(gazel.version);
-    req.onsuccess = function (e) {
-      var tx = e.target.result;
-      if (!db.objectStoreNames.contains(osName)) {
-        db.createObjectStore(osName);
-      }
-      complete(done, [db]);
-    };
-
-    return;
-  }
-    
-  complete(done, [db]);
-};
+}
