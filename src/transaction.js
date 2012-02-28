@@ -7,5 +7,5 @@ Transaction.prototype = {
 };
 
 Transaction.create = function () {
-    return new Transaction;
+  return new Transaction;
 };
