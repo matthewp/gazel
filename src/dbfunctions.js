@@ -1,5 +1,10 @@
+var db;
+
 function openDatabase(osName, onsuccess) {
-  var db;
+  if(db) {
+    complete(onsuccess, [db]);
+    return;
+  }
 
   var req = window.indexedDB.open(gazel.dbName, gazel.version);
   
