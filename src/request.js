@@ -1,0 +1,7 @@
+function Request() {
+
+}
+
+Request.prototype = {
+
+};
