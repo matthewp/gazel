@@ -24,7 +24,7 @@ Client.prototype = {
 
   set: function(key, value, callback) {
     this.register(function() {
-      openReadable(function(os) {
+      openWritable(function(os) {
         // TODO do stuff with objectStore
         callback();
       });
