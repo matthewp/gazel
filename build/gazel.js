@@ -32,15 +32,15 @@ function Client() {
 }
 
 Client.prototype = {
-  chain: [],
+  chain: null,
 
   returned: [],
 
   events: { },
 
   register: function(action, callback) {
-    if(this.chain.length > 0) {
-      callback = this.exec;
+    if(this.chain !== null) {
+      callback = this.flush;
 
       this.chain.push(action);
 
@@ -50,29 +50,36 @@ Client.prototype = {
     action(callback);
   },
 
-  exec: function(callback) {
+  flush: function() {
     var args = Array.prototype.slice.call(arguments) || [];
 
-    if(args.length === 1 && typeof args[0] instanceof Function) {
-      this.complete = callback;
-
-      this.chain.forEach(function(action) {
-        action();
-      });
-
-      return;
+    if(args.length > 0) {
+      this.returned.push(args);
     }
 
-    this.returned.push(args);
+    if(this.chain.length === 0) {
+      this.complete();
+    }
 
-    if(this.returned.length === this.chain.length) {
-      // We are complete, reset and return.
-      this.complete(this.returned);
+    this.chain.shift().call(this);
+  },
+
+  multi: function() {
+    this.chain = [];
+  },
+
+  exec: function(callback) {
+    this.complete = function() {
+      var returned = this.returned;
 
       this.complete = null;
-      this.chain = [];
+      this.chain = null;
       this.returned = [];
+
+      callback(returned);
     }
+
+    this.flush();
   },
 
   on: function(eventType, action) {
@@ -81,7 +88,7 @@ Client.prototype = {
   },
 
   get: function(key, callback) {
-
+    // TODO write function to get contents.
   },
 
   set: function(key, value, callback) {
@@ -89,7 +96,7 @@ Client.prototype = {
       openWritable(function(os) {
         // TODO do stuff with objectStore
         callback();
-      });
+      }, callback);
     });
 
     return this;
