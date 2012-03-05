@@ -24,7 +24,7 @@ Client.prototype = {
   exec: function(callback) {
     var args = Array.prototype.slice.call(arguments) || [];
 
-    if(args.length === 1 && typeof args[0] instanceof Function) {
+    if(args.length === 1 && callback instanceof Function) {
       this.complete = callback;
 
       this.chain.forEach(function(action) {
