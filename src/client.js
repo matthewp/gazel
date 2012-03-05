@@ -37,6 +37,8 @@ Client.prototype = {
 
   multi: function() {
     this.chain = [];
+
+    return this;
   },
 
   exec: function(callback) {
@@ -60,6 +62,8 @@ Client.prototype = {
 
   get: function(key, callback) {
     // TODO write function to get contents.
+
+    return this;
   },
 
   set: function(key, value, callback) {

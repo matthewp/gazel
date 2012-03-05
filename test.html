@@ -7,6 +7,13 @@
 <body>
   <script defer="defer">
     var client = gazel.createClient();
+
+    client.set('foo', 'bar', gazel.print);
+
+    client.multi()
+      .get('foo')
+      .set('foo2', 'bar2')
+      .exec(gazel.print);
   </script>
 </body>
 </html>
