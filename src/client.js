@@ -3,14 +3,14 @@ function Client() {
 }
 
 Client.prototype = {
-  chain: [],
+  chain: null,
 
   returned: [],
 
   events: { },
 
   register: function(action, callback) {
-    if(this.chain.length > 0) {
+    if(this.chain !== null) {
       callback = this.exec;
 
       this.chain.push(action);
