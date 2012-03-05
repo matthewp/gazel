@@ -3,12 +3,7 @@ gazel.dbName = "gazeldb";
 gazel.osName = "gazelos";
 
 gazel.compatible = exists(window.indexedDB)
-  && exists(window.localStorage)
   && exists(window.IDBTransaction);
-
-gazel._events = [];
-gazel._multi = false;
-gazel._queue = Queue.create();
 
 gazel.on = function (name, action) {
   gazel._events.push({

@@ -70,9 +70,9 @@ Client.prototype = {
     this.register(function() {
       openWritable(function(os) {
         // TODO do stuff with objectStore
-        callback();
-      }, callback);
-    });
+        complete(callback);
+      });
+    }, callback);
 
     return this;
   }

@@ -6,12 +6,10 @@ builddir = build/
 # Create the list of modules
 modules = ${srcdir}setup.js\
           ${srcdir}handlers.js\
-          ${srcdir}client.js\
-	        ${srcdir}queue.js\
-		      ${srcdir}dbfunctions.js\
           ${srcdir}gazel.js\
-		      ${srcdir}transactions.js
-
+		      ${srcdir}dbfunctions.js\
+          ${srcdir}client.js\
+          
 # Compress all of the modules into gazel.js
 gazel.js: ${modules}
 	echo "/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */" > ${builddir}$@
