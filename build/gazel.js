@@ -195,14 +195,16 @@ function Client() {
 Client.prototype = {
   chain: null,
 
+  inMulti: function() {
+    return this.chain !== null;
+  },
+
   returned: [],
 
   events: { },
 
   register: function(action, callback) {
-    if(this.chain !== null) {
-      callback = this.flush;
-
+    if(this.inMulti()) {
       this.chain.push(action);
 
       return;
@@ -222,7 +224,7 @@ Client.prototype = {
       this.complete();
     }
 
-    this.chain.shift().call(this);
+    this.chain.shift().call(this, this.flush);
   },
 
   multi: function() {
@@ -257,10 +259,10 @@ Client.prototype = {
   },
 
   set: function(key, value, callback) {
-    this.register(function() {
+    this.register(function(cb) {
       openWritable(function(os) {
         // TODO do stuff with objectStore
-        complete(callback);
+        complete(cb);
       });
     }, callback);
 
