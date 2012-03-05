@@ -100,7 +100,7 @@ gazel.print = function() {
   items.forEach(function(item) {
     console.log(item);
   });
-}
+};
 
 gazel.createClient = function() {
   return new Client;

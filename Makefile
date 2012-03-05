@@ -14,4 +14,10 @@ modules = ${srcdir}setup.js\
 
 # Compress all of the modules into gazel.js
 gazel.js: ${modules}
-	cat > ${builddir}$@ $^
+	echo "/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */" > ${builddir}$@
+	echo ${\n} >> ${builddir}$@
+	echo "(function() {" >> ${builddir}$@
+	echo "'use strict';" >> ${builddir}$@
+	cat >> ${builddir}$@ $^
+	echo "}).call(this);" >> ${builddir}$@
+

@@ -1,3 +1,6 @@
+/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
+
+(function() {
 'use strict';
 var gazel = gazel || {};
 
@@ -297,7 +300,7 @@ gazel.print = function() {
   items.forEach(function(item) {
     console.log(item);
   });
-}
+};
 
 gazel.createClient = function() {
   return new Client;
@@ -315,3 +318,4 @@ gazel.exec = function (complete) {
   gazel._queue.complete = complete;
   gazel._queue.flush();
 };
+}).call(this);

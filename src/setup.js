@@ -1,4 +1,3 @@
-'use strict';
 var gazel = gazel || {};
 
 var exists = function (obj) {
