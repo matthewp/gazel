@@ -52,7 +52,7 @@ Client.prototype = {
       this.returned = [];
 
       callback(returned);
-    }
+    };
 
     this.flush();
   },

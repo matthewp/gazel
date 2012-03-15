@@ -6,6 +6,7 @@ builddir = build/
 # Create the list of modules
 modules = ${srcdir}setup.js\
           ${srcdir}handlers.js\
+          ${srcdir}print.js\
           ${srcdir}gazel.js\
 		      ${srcdir}dbfunctions.js\
           ${srcdir}client.js\

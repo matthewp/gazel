@@ -12,9 +12,13 @@ Queue.prototype = {
   },
 
   complete: function () { },
+
   flush: function () {
     var args = Array.prototype.slice.call(arguments);
-    if (args.length > 0) { this.results.push(args); }
+
+    if (args.length > 0)
+      this.results.push(args);
+    
     if (this.items.length > 0) {
       var action = this.items.shift();
       action();
@@ -29,8 +33,4 @@ Queue.prototype = {
     this.items = [];
     this.results = [];
   }
-};
-
-Queue.create = function () {
-  return new Queue;
 };
