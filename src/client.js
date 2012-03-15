@@ -43,6 +43,8 @@ Client.prototype = {
   },
 
   exec: function(callback) {
+    this.inMulti = false;
+
     this.complete = function() {
       var returned = this.returned;
 
