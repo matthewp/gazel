@@ -17,19 +17,172 @@ window.indexedDB = window.indexedDB
 window.IDBTransaction = window.IDBTransaction
   || window.webkitIDBTransaction;
 
-function complete(func, params) {
+function complete(func, params, context) {
   if (exists(func) && typeof func === "function") {
-    func.apply(null, params);
+    func.apply(context || null, params);
   }
 };
 
-function error(e) {
-  gazel._events.forEach(function (item) {
-    if (item.name.toUpperCase() === "ERROR") {
-      item.action(e);
+function error() { }
+function Client() {
+
+}
+
+Client.prototype = {
+  chain: null,
+
+  inMulti: function() {
+    return this.chain !== null;
+  },
+
+  returned: [],
+
+  events: { },
+
+  register: function(action, callback) {
+    if(this.inMulti()) {
+      this.chain.push(action);
+
+      return;
     }
-  });
+
+    action(callback || function(){});
+  },
+
+  flush: function() {
+    var args = Array.prototype.slice.call(arguments) || [];
+
+    this.returned.push(args);
+
+    if(this.chain.length === 0) {
+      this.complete();
+
+      return;
+    }
+
+    this.chain.shift().call(this, this.flush);
+  },
+
+  multi: function() {
+    this.chain = [];
+
+    return this;
+  },
+
+  exec: function(callback) {
+    this.complete = function() {
+      var returned = this.returned;
+
+      this.complete = null;
+      this.chain = null;
+      this.returned = [];
+
+      callback(returned);
+    };
+
+    var action = this.chain.shift();
+    action.call(this, this.flush);
+  },
+
+  on: function(eventType, action) {
+    var event = this.events[eventType] = this.events[eventType] || [];
+    event.push(action);
+  }
 };
+Object.defineProperty(Client.prototype, 'get', {
+
+  value: function(key, callback) {
+    var self = this;
+
+    this.register(function(cb) {
+      openReadable(function(tx) {
+
+        var req = tx.objectStore(gazel.osName).get(key);
+        req.onerror = error;
+        req.onsuccess = function (e) {
+          cb.call(self, e.target.result);
+        };
+      });
+    }, callback);
+  
+    return this;
+  },
+
+  writable: true,
+
+  enumerable: true,
+
+  configurable: true
+
+});
+Object.defineProperty(Client.prototype, 'set', {
+
+  value: function(key, value, callback) {
+    var self = this;
+
+    this.register(function(cb) {
+      openWritable(function(tx) {
+        var req = tx.objectStore(gazel.osName).put(value, key);
+        req.onerror = error;
+        req.onsuccess = function (e) {
+          cb.call(self, e.target.result);
+        };
+      });
+    });
+
+    return this;
+  },
+
+  writable: true,
+
+  enumerable: true,
+
+  configurable: true
+
+});
+
+
+gazel.set = function (key, value, onsuccess) {
+  var set = function () {
+    var n = gazel.osName;
+    openWritable(n, function (tx) {
+      var req = tx.objectstore(n).put(value, key);
+      req.onerror = error;
+      req.onsuccess = function (e) {
+        complete(onsuccess, [e.target.result]);
+      };
+    });
+  };
+
+  if (gazel._multi) {
+    onsuccess = gazel._queue.flush.bind(gazel._queue);
+    gazel._queue.add(set);
+  } else {
+    set();
+  }
+
+  return gazel;
+};
+
+
+Object.defineProperty(Client.prototype, 'incr', {
+
+  value: function(key, by, callback) {
+    this.register(function(cb) {
+      this.get(key, function(val) {
+        this.set(key, val + by, cb);
+      });
+    }, callback);
+
+    return this;
+  },
+
+  writable: true,
+
+  enumerable: true,
+
+  configurable: true
+});
 gazel.print = function() {
   var args = Array.prototype.slice.call(arguments);
   if(args.length === 0)
@@ -115,95 +268,4 @@ function openWritable(onsuccess) {
     complete(onsuccess, [tx]);
   });
 }
-function Client() {
-
-}
-
-Client.prototype = {
-  chain: null,
-
-  inMulti: function() {
-    return this.chain !== null;
-  },
-
-  returned: [],
-
-  events: { },
-
-  register: function(action, callback) {
-    if(this.inMulti()) {
-      this.chain.push(action);
-
-      return;
-    }
-
-    action(callback);
-  },
-
-  flush: function() {
-    var args = Array.prototype.slice.call(arguments) || [];
-
-    if(args.length > 0) {
-      this.returned.push(args);
-    }
-
-    if(this.chain.length === 0) {
-      this.complete();
-    }
-
-    this.chain.shift().call(this, this.flush);
-  },
-
-  multi: function() {
-    this.chain = [];
-
-    return this;
-  },
-
-  exec: function(callback) {
-    this.complete = function() {
-      var returned = this.returned;
-
-      this.complete = null;
-      this.chain = null;
-      this.returned = [];
-
-      callback(returned);
-    };
-
-    this.flush();
-  },
-
-  on: function(eventType, action) {
-    var event = this.events[eventType] = this.events[eventType] || [];
-    event.push(action);
-  },
-
-  get: function(key, callback) {
-    // TODO write function to get contents.
-
-    return this;
-  },
-
-  set: function(key, value, callback) {
-    this.register(function(cb) {
-      openWritable(function(os) {
-        // TODO do stuff with objectStore
-        complete(cb);
-      });
-    }, callback);
-
-    return this;
-  },
-
-  incr: function(key, by, callback) {
-    this.register(function(cb) {
-      this.get(key, function(val) {
-        this.set(key, val + by, cb);
-      });
-    }, callback);
-
-    return this;
-  }
-};
 }).call(this);

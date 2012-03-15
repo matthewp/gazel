@@ -1,29 +1,18 @@
-gazel.incr = function (key, by, onsuccess) {
-  var incr = function () {
-    var n = gazel.osName;
-    openWritable(n, function (tx) {
-      var req = tx.objectStore(n).get(key);
-      req.onerror = error;
-      req.onsuccess = function (e) {
-        var value = e.target.result += by;
+Object.defineProperty(Client.prototype, 'incr', {
 
-        req = tx.objectStore(n).put(value, key);
-        req.onerror = error;
-        req.onsuccess = function (e) {
-          complete(onsuccess, [e.target.result]);
-        };
-      };
-    });
-  };
+  value: function(key, by, callback) {
+    this.register(function(cb) {
+      this.get(key, function(val) {
+        this.set(key, val + by, cb);
+      });
+    }, callback);
 
-  if (gazel._multi) {
-    onsuccess = gazel._queue.flush.bind(gazel._queue);
-    gazel._queue.add(incr);
-  } else {
-    incr();
-  }
+    return this;
+  },
 
-  return gazel;
-};
+  writable: true,
 
+  enumerable: true,
 
+  configurable: true
+});

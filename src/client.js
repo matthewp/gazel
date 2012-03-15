@@ -20,18 +20,18 @@ Client.prototype = {
       return;
     }
 
-    action(callback);
+    action(callback || function(){});
   },
 
   flush: function() {
     var args = Array.prototype.slice.call(arguments) || [];
 
-    if(args.length > 0) {
-      this.returned.push(args);
-    }
+    this.returned.push(args);
 
     if(this.chain.length === 0) {
       this.complete();
+
+      return;
     }
 
     this.chain.shift().call(this, this.flush);
@@ -54,38 +54,12 @@ Client.prototype = {
       callback(returned);
     };
 
-    this.flush();
+    var action = this.chain.shift();
+    action.call(this, this.flush);
   },
 
   on: function(eventType, action) {
     var event = this.events[eventType] = this.events[eventType] || [];
     event.push(action);
-  },
-
-  get: function(key, callback) {
-    // TODO write function to get contents.
-
-    return this;
-  },
-
-  set: function(key, value, callback) {
-    this.register(function(cb) {
-      openWritable(function(os) {
-        // TODO do stuff with objectStore
-        complete(cb);
-      });
-    }, callback);
-
-    return this;
-  },
-
-  incr: function(key, by, callback) {
-    this.register(function(cb) {
-      this.get(key, function(val) {
-        this.set(key, val + by, cb);
-      });
-    }, callback);
-
-    return this;
   }
 };

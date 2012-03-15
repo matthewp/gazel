@@ -11,10 +11,10 @@
 
       client.set('foo', 'bar', gazel.print);
 
-      client.multi()
-        .get('foo')
-        .set('foo2', 'bar2')
-        .exec(gazel.print);
+      var c = client.multi();
+      c = c.get('foo');
+      c = c.set('foo2', 'bar2');
+      c = c.exec(gazel.print);
     }
 
     window.addEventListener('load', runTests);

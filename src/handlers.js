@@ -1,13 +1,7 @@
-function complete(func, params) {
+function complete(func, params, context) {
   if (exists(func) && typeof func === "function") {
-    func.apply(null, params);
+    func.apply(context || null, params);
   }
 };
 
-function error(e) {
-  gazel._events.forEach(function (item) {
-    if (item.name.toUpperCase() === "ERROR") {
-      item.action(e);
-    }
-  });
-};
+function error() { }

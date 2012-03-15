@@ -1,23 +1,26 @@
-gazel.get = function (key, onsuccess) {
-  var get = function () {
-    var n = gazel.osName;
-    openReadable(n, function (tx) {
-      var req = tx.objectStore(n).get(key);
-      req.onerror = error;
-      req.onsuccess = function (e) {
-        complete(onsuccess, [e.target.result]);
-      };
-    });
-  };
+Object.defineProperty(Client.prototype, 'get', {
 
-  if (gazel._multi) {
-    onsuccess = gazel._queue.flush.bind(gazel._queue);
-    gazel._queue.add(get);
-  } else {
-    get();
-  }
+  value: function(key, callback) {
+    var self = this;
 
-  return gazel;
-};
+    this.register(function(cb) {
+      openReadable(function(tx) {
 
+        var req = tx.objectStore(gazel.osName).get(key);
+        req.onerror = error;
+        req.onsuccess = function (e) {
+          cb.call(self, e.target.result);
+        };
+      });
+    }, callback);
+  
+    return this;
+  },
 
+  writable: true,
+
+  enumerable: true,
+
+  configurable: true
+
+});
