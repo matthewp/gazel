@@ -2,7 +2,7 @@ var db;
 
 function openDatabase(onsuccess, onerror) {
   if(db) {
-    complete(onsuccess, [db]);
+    onsuccess(db);
     return;
   }
 
@@ -31,7 +31,7 @@ function openDatabase(onsuccess, onerror) {
       return;
     }
 
-    complete(onsuccess, [db]);
+    onsuccess(db);
   };
 
   req.onerror = onerror;
@@ -41,7 +41,7 @@ function openReadable(onsuccess, onerror) {
   openDatabase(function (db) {
     var tx = db.transaction([gazel.osName], IDBTransaction.READ);
     tx.onerror = onerror;
-    complete(onsuccess, [tx]);
+    onsuccess(tx);
   }, onerror);
 }
 
@@ -49,6 +49,6 @@ function openWritable(onsuccess, onerror) {
   openDatabase(function (db) {
     var tx = db.transaction([gazel.osName], IDBTransaction.READ_WRITE);
     tx.onerror = onerror;
-    complete(onsuccess, [tx]);
+    onsuccess(tx);
   }, onerror);
 }
