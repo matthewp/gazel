@@ -5,16 +5,14 @@ function Client() {
 Client.prototype = {
   chain: null,
 
-  inMulti: function() {
-    return this.chain !== null;
-  },
+  inMulti: false,
 
   returned: [],
 
   events: { },
 
   register: function(action, callback) {
-    if(this.inMulti()) {
+    if(this.inMulti) {
       this.chain.push(action);
 
       return;
@@ -39,6 +37,7 @@ Client.prototype = {
 
   multi: function() {
     this.chain = [];
+    this.inMulti = true;
 
     return this;
   },

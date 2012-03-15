@@ -31,16 +31,14 @@ function Client() {
 Client.prototype = {
   chain: null,
 
-  inMulti: function() {
-    return this.chain !== null;
-  },
+  inMulti: false,
 
   returned: [],
 
   events: { },
 
   register: function(action, callback) {
-    if(this.inMulti()) {
+    if(this.inMulti) {
       this.chain.push(action);
 
       return;
@@ -65,6 +63,7 @@ Client.prototype = {
 
   multi: function() {
     this.chain = [];
+    this.inMulti = true;
 
     return this;
   },
@@ -140,31 +139,6 @@ Object.defineProperty(Client.prototype, 'set', {
   configurable: true
 
 });
-
-
-gazel.set = function (key, value, onsuccess) {
-  var set = function () {
-    var n = gazel.osName;
-    openWritable(n, function (tx) {
-      var req = tx.objectstore(n).put(value, key);
-      req.onerror = error;
-      req.onsuccess = function (e) {
-        complete(onsuccess, [e.target.result]);
-      };
-    });
-  };
-
-  if (gazel._multi) {
-    onsuccess = gazel._queue.flush.bind(gazel._queue);
-    gazel._queue.add(set);
-  } else {
-    set();
-  }
-
-  return gazel;
-};
-
-
 Object.defineProperty(Client.prototype, 'incr', {
 
   value: function(key, by, callback) {
