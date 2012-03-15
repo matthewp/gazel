@@ -106,6 +106,7 @@
             .set('Fo', 3)
             .set('Fum', 4)
             .incr('Fee', 10)
+            .get('Fee')
             .exec(function(results) {
               var fee = results.pop();
 
