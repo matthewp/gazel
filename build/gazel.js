@@ -129,7 +129,7 @@ Object.defineProperty(Client.prototype, 'set', {
           cb.call(self, e.target.result);
         };
       });
-    });
+    }, callback);
 
     return this;
   },
