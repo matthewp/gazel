@@ -1,7 +1,0 @@
-function Request() {
-
-}
-
-Request.prototype = {
-
-};
