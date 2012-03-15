@@ -7,6 +7,7 @@ builddir = build/
 modules = ${srcdir}setup.js\
           ${srcdir}handlers.js\
           ${srcdir}client.js\
+          ${srcdir}error.js\
           ${srcdir}get.js\
           ${srcdir}set.js\
           ${srcdir}incr.js\

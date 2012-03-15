@@ -90,6 +90,23 @@ Client.prototype = {
     event.push(action);
   }
 };
+Object.defineProperty(Client.prototype, 'handleError', {
+
+  value: function() {
+    var args = Array.prototype.slice.call(arguments);
+
+    var actions = this.events['error'] || [];
+    actions.forEach(function(action) {
+      action.apply(null, args);
+    });
+  },
+
+  writable: true,
+
+  enumerable: true,
+
+  configurable: true
+});
 Object.defineProperty(Client.prototype, 'get', {
 
   value: function(key, callback) {
@@ -103,7 +120,7 @@ Object.defineProperty(Client.prototype, 'get', {
         req.onsuccess = function (e) {
           cb.call(self, e.target.result);
         };
-      });
+      }, self.handleError);
     }, callback);
   
     return this;
@@ -128,7 +145,7 @@ Object.defineProperty(Client.prototype, 'set', {
         req.onsuccess = function (e) {
           cb.call(self, e.target.result);
         };
-      });
+      }, self.handleError);
     }, callback);
 
     return this;
@@ -192,7 +209,7 @@ gazel.createClient = function() {
 this.gazel = gazel;
 var db;
 
-function openDatabase(onsuccess) {
+function openDatabase(onsuccess, onerror) {
   if(db) {
     complete(onsuccess, [db]);
     return;
@@ -226,22 +243,22 @@ function openDatabase(onsuccess) {
     complete(onsuccess, [db]);
   };
 
-  req.onerror = error;
+  req.onerror = onerror;
 }
 
-function openReadable(onsuccess) {
+function openReadable(onsuccess, onerror) {
   openDatabase(function (db) {
     var tx = db.transaction([gazel.osName], IDBTransaction.READ);
-    tx.onerror = error;
+    tx.onerror = onerror;
     complete(onsuccess, [tx]);
-  });
+  }, onerror);
 }
 
-function openWritable(onsuccess) {
+function openWritable(onsuccess, onerror) {
   openDatabase(function (db) {
     var tx = db.transaction([gazel.osName], IDBTransaction.READ_WRITE);
-    tx.onerror = error;
+    tx.onerror = onerror;
     complete(onsuccess, [tx]);
-  });
+  }, onerror);
 }
 }).call(this);

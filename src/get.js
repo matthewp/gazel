@@ -11,7 +11,7 @@ Object.defineProperty(Client.prototype, 'get', {
         req.onsuccess = function (e) {
           cb.call(self, e.target.result);
         };
-      });
+      }, self.handleError);
     }, callback);
   
     return this;
