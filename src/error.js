@@ -1,17 +1,8 @@
-Object.defineProperty(Client.prototype, 'handleError', {
+Client.prototype.handleError = function() {
+  var args = Array.prototype.slice.call(arguments);
 
-  value: function() {
-    var args = Array.prototype.slice.call(arguments);
-
-    var actions = this.events['error'] || [];
-    actions.forEach(function(action) {
-      action.apply(null, args);
-    });
-  },
-
-  writable: true,
-
-  enumerable: true,
-
-  configurable: true
-});
+  var actions = this.events['error'] || [];
+  actions.forEach(function(action) {
+    action.apply(null, args);
+  });
+};

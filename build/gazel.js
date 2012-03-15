@@ -90,92 +90,54 @@ Client.prototype = {
     event.push(action);
   }
 };
-Object.defineProperty(Client.prototype, 'handleError', {
+Client.prototype.handleError = function() {
+  var args = Array.prototype.slice.call(arguments);
 
-  value: function() {
-    var args = Array.prototype.slice.call(arguments);
+  var actions = this.events['error'] || [];
+  actions.forEach(function(action) {
+    action.apply(null, args);
+  });
+};
+Client.prototype.get = function(key, callback) {
+  var self = this;
 
-    var actions = this.events['error'] || [];
-    actions.forEach(function(action) {
-      action.apply(null, args);
+  this.register(function(cb) {
+    openReadable(function(tx) {
+
+      var req = tx.objectStore(gazel.osName).get(key);
+      req.onerror = error;
+      req.onsuccess = function (e) {
+        cb.call(self, e.target.result);
+      };
+    }, self.handleError);
+  }, callback);
+
+  return this;
+};
+Client.prototype.set = function(key, value, callback) {
+  var self = this;
+
+  this.register(function(cb) {
+    openWritable(function(tx) {
+      var req = tx.objectStore(gazel.osName).put(value, key);
+      req.onerror = error;
+      req.onsuccess = function (e) {
+        cb.call(self, e.target.result);
+      };
+    }, self.handleError);
+  }, callback);
+
+  return this;
+};
+Client.prototype.incr = function(key, by, callback) {
+  this.register(function(cb) {
+    this.get(key, function(val) {
+      this.set(key, val + by, cb);
     });
-  },
+  }, callback);
 
-  writable: true,
-
-  enumerable: true,
-
-  configurable: true
-});
-Object.defineProperty(Client.prototype, 'get', {
-
-  value: function(key, callback) {
-    var self = this;
-
-    this.register(function(cb) {
-      openReadable(function(tx) {
-
-        var req = tx.objectStore(gazel.osName).get(key);
-        req.onerror = error;
-        req.onsuccess = function (e) {
-          cb.call(self, e.target.result);
-        };
-      }, self.handleError);
-    }, callback);
-  
-    return this;
-  },
-
-  writable: true,
-
-  enumerable: true,
-
-  configurable: true
-
-});
-Object.defineProperty(Client.prototype, 'set', {
-
-  value: function(key, value, callback) {
-    var self = this;
-
-    this.register(function(cb) {
-      openWritable(function(tx) {
-        var req = tx.objectStore(gazel.osName).put(value, key);
-        req.onerror = error;
-        req.onsuccess = function (e) {
-          cb.call(self, e.target.result);
-        };
-      }, self.handleError);
-    }, callback);
-
-    return this;
-  },
-
-  writable: true,
-
-  enumerable: true,
-
-  configurable: true
-
-});
-Object.defineProperty(Client.prototype, 'incr', {
-
-  value: function(key, by, callback) {
-    this.register(function(cb) {
-      this.get(key, function(val) {
-        this.set(key, val + by, cb);
-      });
-    }, callback);
-
-    return this;
-  },
-
-  writable: true,
-
-  enumerable: true,
-
-  configurable: true
-});
+  return this;
+};
 gazel.print = function() {
   var args = Array.prototype.slice.call(arguments);
   if(args.length === 0)
