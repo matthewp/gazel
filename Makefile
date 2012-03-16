@@ -10,6 +10,7 @@ modules = ${srcdir}setup.js\
           ${srcdir}get.js\
           ${srcdir}set.js\
           ${srcdir}incr.js\
+          ${srcdir}decr.js\
           ${srcdir}print.js\
           ${srcdir}gazel.js\
 		      ${srcdir}dbfunctions.js\

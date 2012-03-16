@@ -135,6 +135,13 @@ Client.prototype.incrby = function(key, increment, callback) {
 Client.prototype.incr = function(key, callback) {
   return this.incrby(key, 1, callback);
 };
+Client.prototype.decrby = function(key, increment, callback) {
+  return this.incrby(key, -increment, callback);
+};
+
+Client.prototype.decr = function(key, callback) {
+  return this.incrby(key, -1, callback);
+};
 gazel.print = function() {
   var args = Array.prototype.slice.call(arguments);
   if(args.length === 0)
