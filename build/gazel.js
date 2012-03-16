@@ -68,6 +68,20 @@ Dict.prototype = {
     });
   }
 };
+var Trans = Object.create(Dict, {
+
+  abortAll: function() {
+    var self = this,
+        keys = self.keys();
+
+    keys.forEach(function(key) {
+      var tx = self.get(key);
+
+      tx.abort();
+    });
+  }
+
+});
 function Client() {
 
 }
@@ -81,7 +95,7 @@ Client.prototype = {
 
   events: { },
 
-  trans: new Dict(),
+  trans: new Trans(),
 
   register: function(action, callback) {
     if(this.inMulti) {
@@ -146,6 +160,9 @@ Client.prototype = {
     var event = this.events[eventType] = this.events[eventType] || [];
     event.push(action);
   }
+};
+Client.prototype.discard = function() {
+  this.trans.abortAll();
 };
 Client.prototype.handleError = function() {
   var args = Array.prototype.slice.call(arguments);

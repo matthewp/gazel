@@ -11,7 +11,7 @@ Client.prototype = {
 
   events: { },
 
-  trans: new Dict(),
+  trans: new Trans(),
 
   register: function(action, callback) {
     if(this.inMulti) {

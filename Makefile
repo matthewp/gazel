@@ -6,7 +6,9 @@ builddir = build/
 # Create the list of modules
 modules = ${srcdir}setup.js\
           ${srcdir}dict.js\
+          ${srcdir}trans.js\
           ${srcdir}client.js\
+          ${srcdir}discard.js\
           ${srcdir}error.js\
           ${srcdir}get.js\
           ${srcdir}set.js\
