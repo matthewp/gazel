@@ -39,5 +39,11 @@ Dict.prototype = {
 
     if(k.hasOwnProperty(p))
       delete k[p];
+  },
+
+  keys: function() {
+    return Object.keys(this.items).map(function(key) {
+      return key.substring(1);
+    });
   }
-}
+};

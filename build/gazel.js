@@ -17,6 +17,8 @@ window.indexedDB = window.indexedDB
 window.IDBTransaction = window.IDBTransaction
   || window.webkitIDBTransaction;
 
+var slice = Array.prototype.slice,
+    splice = Array.prototype.splice;
 function Dict() { }
 
 Dict.prototype = {
@@ -58,8 +60,14 @@ Dict.prototype = {
 
     if(k.hasOwnProperty(p))
       delete k[p];
+  },
+
+  keys: function() {
+    return Object.keys(this.items).map(function(key) {
+      return key.substring(1);
+    });
   }
-}
+};
 function Client() {
 
 }
@@ -73,6 +81,8 @@ Client.prototype = {
 
   events: { },
 
+  trans: new Dict(),
+
   register: function(action, callback) {
     if(this.inMulti) {
       this.chain.push(action);
@@ -80,11 +90,22 @@ Client.prototype = {
       return;
     }
 
-    action(callback || function(){});
+    var self = this;
+    action(function() {
+      var args = slice.call(arguments);
+
+      if(self.trans.count() > 0) {
+        self.trans.keys.forEach(function(key) {
+          self.trans.del(key);
+        });
+      }
+
+      (callback || function(){}).apply(null, args);
+    });
   },
 
   flush: function() {
-    var args = Array.prototype.slice.call(arguments) || [];
+    var args = slice.call(arguments) || [];
 
     this.returned.push(args);
 
