@@ -109,7 +109,7 @@
       font-style: italic;
     }
   </style>
-  <script type="text/javascript" src="https://raw.github.com/matthewp/gazel/master/build/gazel.min.js"></script>
+  <script type="text/javascript" src="https://raw.github.com/matthewp/gazel/master/build/gazel.js"></script>
 </head>
 <body>
   <header>
@@ -123,10 +123,14 @@
       <pre>curl https://raw.github.com/matthewp/gazel/master/build/gazel.min.js > gazel.min.js</pre>
     </article>
     <article>
-      <h2>See it</h2>
+      <h2>Usage</h2>
       <script id="scr_demo">
         function demo() {
           var client = gazel.createClient();
+
+          client.on('error', function(err) {
+            alert('Oh noes!');
+          });
 
           client.set('Foo', 'bar', gazel.print);
 
