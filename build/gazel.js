@@ -76,8 +76,9 @@ var Trans = Object.create(Dict, {
 
     keys.forEach(function(key) {
       var tx = self.get(key);
-
       tx.abort();
+
+      self.del(key);
     });
   }
 
