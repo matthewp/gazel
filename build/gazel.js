@@ -17,13 +17,6 @@ window.indexedDB = window.indexedDB
 window.IDBTransaction = window.IDBTransaction
   || window.webkitIDBTransaction;
 
-function complete(func, params, context) {
-  if (exists(func) && typeof func === "function") {
-    func.apply(context || null, params);
-  }
-};
-
-function error() { }
 function Client() {
 
 }
@@ -105,11 +98,11 @@ Client.prototype.get = function(key, callback) {
     openReadable(function(tx) {
 
       var req = tx.objectStore(gazel.osName).get(key);
-      req.onerror = error;
+      req.onerror = self.handleError.bind(self);
       req.onsuccess = function (e) {
         cb.call(self, e.target.result);
       };
-    }, self.handleError);
+    }, self.handleError.bind(self));
   }, callback);
 
   return this;
@@ -120,11 +113,11 @@ Client.prototype.set = function(key, value, callback) {
   this.register(function(cb) {
     openWritable(function(tx) {
       var req = tx.objectStore(gazel.osName).put(value, key);
-      req.onerror = error;
+      req.onerror = self.handleError.bind(self);
       req.onsuccess = function (e) {
         cb.call(self, e.target.result);
       };
-    }, self.handleError);
+    }, self.handleError.bind(self));
   }, callback);
 
   return this;
@@ -155,21 +148,13 @@ gazel.osName = "gazelos";
 gazel.compatible = exists(window.indexedDB)
   && exists(window.IDBTransaction);
 
-gazel.on = function (name, action) {
-  gazel._events.push({
-    name: name,
-    action: action
-  });
-
-  return gazel;
-};
-
 gazel.createClient = function() {
   return new Client;
 };
 
 this.gazel = gazel;
 var db;
+var loadingDb = false;
 
 function openDatabase(onsuccess, onerror) {
   if(db) {
@@ -177,20 +162,29 @@ function openDatabase(onsuccess, onerror) {
     return;
   }
 
+  if(loadingDb) {
+    setTimeout(function() {
+      openDatabase(onsuccess, onerror);
+    }, 100);
+
+    return;
+  }
+  loadingDb = true;
+
   var req = window.indexedDB.open(gazel.dbName, gazel.version);
   
   req.onupgradeneeded = function (e) {
-    db = e.target.result;
+    var uDb = e.target.result;
 
-    if(!db.objectStoreNames.contains(gazel.osName))
-      db.createObjectStore(gazel.osName);
+    if(!uDb.objectStoreNames.contains(gazel.osName))
+      uDb.createObjectStore(gazel.osName);
   };
 
   req.onsuccess = function (e) {
-    db = e.target.result;
+    var sDb = e.target.result;
 
-    if (db.setVersion && Number(db.version) !== gazel.version) {
-      var dbReq = db.setVersion(gazel.version);
+    if (sDb.setVersion && Number(sDb.version) !== gazel.version) {
+      var dbReq = sDb.setVersion(String(gazel.version));
       dbReq.onsuccess = function (e2) {
         e.target.result = e2.target.result.db;
         req.onupgradeneeded(e);
@@ -199,8 +193,17 @@ function openDatabase(onsuccess, onerror) {
         return;
       };
 
+      dbReq.onerror = onerror;
+
+      dbReq.onfailure = onerror;
+
+      dbReq.onblocked = onerror;
+
       return;
     }
+
+    db = sDb;
+    loadingDb = false;
 
     onsuccess(db);
   };

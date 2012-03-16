@@ -1,4 +1,5 @@
 var db;
+var loadingDb = false;
 
 function openDatabase(onsuccess, onerror) {
   if(db) {
@@ -6,20 +7,29 @@ function openDatabase(onsuccess, onerror) {
     return;
   }
 
+  if(loadingDb) {
+    setTimeout(function() {
+      openDatabase(onsuccess, onerror);
+    }, 100);
+
+    return;
+  }
+  loadingDb = true;
+
   var req = window.indexedDB.open(gazel.dbName, gazel.version);
   
   req.onupgradeneeded = function (e) {
-    db = e.target.result;
+    var uDb = e.target.result;
 
-    if(!db.objectStoreNames.contains(gazel.osName))
-      db.createObjectStore(gazel.osName);
+    if(!uDb.objectStoreNames.contains(gazel.osName))
+      uDb.createObjectStore(gazel.osName);
   };
 
   req.onsuccess = function (e) {
-    db = e.target.result;
+    var sDb = e.target.result;
 
-    if (db.setVersion && Number(db.version) !== gazel.version) {
-      var dbReq = db.setVersion(gazel.version);
+    if (sDb.setVersion && Number(sDb.version) !== gazel.version) {
+      var dbReq = sDb.setVersion(String(gazel.version));
       dbReq.onsuccess = function (e2) {
         e.target.result = e2.target.result.db;
         req.onupgradeneeded(e);
@@ -28,8 +38,17 @@ function openDatabase(onsuccess, onerror) {
         return;
       };
 
+      dbReq.onerror = onerror;
+
+      dbReq.onfailure = onerror;
+
+      dbReq.onblocked = onerror;
+
       return;
     }
+
+    db = sDb;
+    loadingDb = false;
 
     onsuccess(db);
   };

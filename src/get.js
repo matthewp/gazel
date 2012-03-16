@@ -5,11 +5,11 @@ Client.prototype.get = function(key, callback) {
     openReadable(function(tx) {
 
       var req = tx.objectStore(gazel.osName).get(key);
-      req.onerror = error;
+      req.onerror = self.handleError.bind(self);
       req.onsuccess = function (e) {
         cb.call(self, e.target.result);
       };
-    }, self.handleError);
+    }, self.handleError.bind(self));
   }, callback);
 
   return this;
