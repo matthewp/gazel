@@ -156,7 +156,10 @@
           window.removeEventListener('load', loaded);
          
           var demo = document.getElementById('demo');
-          if(gazel.compatible) {
+          
+          if(!gazel) {
+            demo.textContent = 'Unable to load Gazel!';
+          } else if(gazel.compatible) {
             var js = document.getElementById('scr_demo').innerHTML;
             demo.textContent = js;
           } else {
