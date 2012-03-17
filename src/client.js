@@ -6,7 +6,7 @@ function Client() {
   this.trans = Thing.create(Trans, true);
   this.transMap = Thing.create(Dict, true);
 
-  this.events = {};
+  this.events = Thing.create(Dict, true);
 }
 
 Client.prototype = {
@@ -87,7 +87,12 @@ Client.prototype = {
   },
 
   on: function(eventType, action) {
-    var event = this.events[eventType] = this.events[eventType] || [];
+    var event = this.events.get(eventType);
+    if(!event) {
+      event = [];
+      this.events.set(eventType, event);
+    }
+
     event.push(action);
   }
 };

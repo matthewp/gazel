@@ -150,7 +150,7 @@ function Client() {
   this.trans = Thing.create(Trans, true);
   this.transMap = Thing.create(Dict, true);
 
-  this.events = {};
+  this.events = Thing.create(Dict, true);
 }
 
 Client.prototype = {
@@ -231,7 +231,12 @@ Client.prototype = {
   },
 
   on: function(eventType, action) {
-    var event = this.events[eventType] = this.events[eventType] || [];
+    var event = this.events.get(eventType);
+    if(!event) {
+      event = [];
+      this.events.set(eventType, event);
+    }
+
     event.push(action);
   }
 };
@@ -241,7 +246,7 @@ Client.prototype.discard = function() {
 Client.prototype.handleError = function() {
   var args = Array.prototype.slice.call(arguments);
 
-  var actions = this.events['error'] || [];
+  var actions = this.events.get('error') || [];
   actions.forEach(function(action) {
     action.apply(null, args);
   });
