@@ -141,6 +141,7 @@
             .set('Fo', 3)
             .set('Fum', 4)
             .incrby('Fee', 10)
+            .del('Fi', 'Fo', 'Fum')
             .get('Fee')
             .exec(function(results) {
               var fee = results.pop()[0];

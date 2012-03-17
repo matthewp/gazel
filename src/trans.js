@@ -17,6 +17,18 @@ var Trans = Thing.create(Dict, {
 
       self.del(key);
     });
+  },
+
+  pull: function(db, uuid, perm) {
+    var tx = this.get(uuid);
+    if(!tx) {
+      tx = db.transaction([gazel.osName], perm);
+      tx.onerror = onerror;
+
+      this.set(uuid, tx);
+    }
+
+    return tx;
   }
  
 });
