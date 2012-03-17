@@ -1,15 +1,23 @@
-var Trans = Object.create(Dict, {
+function Trans() { }
 
-  abortAll: function() {
-    var self = this,
-        keys = self.keys();
+Trans.prototype = new Dict;
+Trans.prototype.constructor = Trans;
 
-    keys.forEach(function(key) {
-      var tx = self.get(key);
-      tx.abort();
+Trans.prototype.add = function() {
+  var uuid = createUuid();
+  this.set(uuid, undefined);
 
-      self.del(key);
-    });
-  }
+  return uuid;
+};
 
-});
+Trans.prototype.abortAll = function() {
+  var self = this,
+      keys = self.keys();
+
+  keys.forEach(function(key) {
+    var tx = self.get(key);
+    tx.abort();
+
+    self.del(key);
+  });
+};

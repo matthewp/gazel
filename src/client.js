@@ -1,9 +1,7 @@
-function Client() {
-
-}
+function Client() { }
 
 Client.prototype = {
-  chain: null,
+  chain: [],
 
   inMulti: false,
 
@@ -13,22 +11,31 @@ Client.prototype = {
 
   trans: new Trans(),
 
-  register: function(action, callback) {
+  transMap: new Dict(),
+
+  register: function(type, action, callback) {
     if(this.inMulti) {
-      this.chain.push(action);
+      var uuid = this.transMap.get(type);
+      if(!uuid) {
+        uuid = this.trans.add();
+        this.transMap.set(type, uuid);
+      }
+
+      this.chain.push({
+        uuid: uuid,
+        action: action
+      });
 
       return;
     }
 
-    var self = this;
-    action(function() {
+    var self = this,
+        uuid = self.trans.add();
+
+    action(uuid, function() {
       var args = slice.call(arguments);
 
-      if(self.trans.count() > 0) {
-        self.trans.keys.forEach(function(key) {
-          self.trans.del(key);
-        });
-      }
+      self.trans.del(uuid);
 
       (callback || function(){}).apply(null, args);
     });
@@ -45,7 +52,8 @@ Client.prototype = {
       return;
     }
 
-    this.chain.shift().call(this, this.flush);
+    var item = this.chain.shift();
+    item.action.call(this, item.uuid, this.flush);
   },
 
   multi: function() {
@@ -68,8 +76,8 @@ Client.prototype = {
       callback(returned);
     };
 
-    var action = this.chain.shift();
-    action.call(this, this.flush);
+    var item = this.chain.shift();
+    item.action.call(this, item.uuid, this.flush);
   },
 
   on: function(eventType, action) {
