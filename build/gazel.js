@@ -43,12 +43,11 @@ function createUuid(
       );
   return b
  }
-function Dict() { }
+function Dict() {
+  this.items = {};
+}
 
 Dict.prototype = {
-
-  items: { },
-
   prop: function(key) {
     return ':' + key;
   },
@@ -92,44 +91,37 @@ Dict.prototype = {
     });
   }
 };
-function Trans() { }
+var Trans = Object.create(Dict.prototype, {
 
-Trans.prototype = new Dict;
-Trans.prototype.constructor = Trans;
+  add: function() {
+    var uuid = createUuid();
+    this.set(uuid, undefined);
 
-Trans.prototype.add = function() {
-  var uuid = createUuid();
-  this.set(uuid, undefined);
+    return uuid;
+  },
 
-  return uuid;
-};
+  abortAll: function() {
+    var self = this,
+        keys = self.keys();
 
-Trans.prototype.abortAll = function() {
-  var self = this,
-      keys = self.keys();
+    keys.forEach(function(key) {
+      var tx = self.get(key);
+      tx.abort();
 
-  keys.forEach(function(key) {
-    var tx = self.get(key);
-    tx.abort();
+      self.del(key);
+    });
+  }
+});
+function Client() {
+  this.chain = [];
+  this.inMulti = false;
+  this.returned = [];
 
-    self.del(key);
-  });
-};
-function Client() { }
+  this.trans = Object.create(Trans);
+  this.transMap = Object.create(Trans);
+}
 
 Client.prototype = {
-  chain: [],
-
-  inMulti: false,
-
-  returned: [],
-
-  events: { },
-
-  trans: new Trans(),
-
-  transMap: new Dict(),
-
   register: function(type, action, callback) {
     if(this.inMulti) {
       var uuid = this.transMap.get(type);
@@ -189,6 +181,7 @@ Client.prototype = {
       this.complete = null;
       this.chain = null;
       this.returned = [];
+      this.transMap = new Trans();
 
       callback(returned);
     };

@@ -1,18 +1,13 @@
-function Client() { }
+function Client() {
+  this.chain = [];
+  this.inMulti = false;
+  this.returned = [];
+
+  this.trans = Object.create(Trans);
+  this.transMap = Object.create(Trans);
+}
 
 Client.prototype = {
-  chain: [],
-
-  inMulti: false,
-
-  returned: [],
-
-  events: { },
-
-  trans: new Trans(),
-
-  transMap: new Dict(),
-
   register: function(type, action, callback) {
     if(this.inMulti) {
       var uuid = this.transMap.get(type);
@@ -72,6 +67,7 @@ Client.prototype = {
       this.complete = null;
       this.chain = null;
       this.returned = [];
+      this.transMap = new Trans();
 
       callback(returned);
     };

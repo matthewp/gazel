@@ -1,9 +1,8 @@
-function Dict() { }
+function Dict() {
+  this.items = {};
+}
 
 Dict.prototype = {
-
-  items: { },
-
   prop: function(key) {
     return ':' + key;
   },
