@@ -378,7 +378,9 @@ Client.prototype.del = function() {
         var req = os.delete(key);
         req.onerror = self.handleError.bind(self);
         req.onsuccess = function(e) {
-          left--; deleted++;
+          left--;
+          
+          if(e.target.result) deleted++;
           
           if(left === 0)
             exit();
