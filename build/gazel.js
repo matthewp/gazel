@@ -19,6 +19,32 @@ window.IDBTransaction = window.IDBTransaction
 
 var slice = Array.prototype.slice,
     splice = Array.prototype.splice;
+var Thing = Object.create(null);
+Thing.create = function(proto, props, init) {
+  if(typeof props === 'undefined' && typeof init === 'undefined')
+    return Object.create(proto);
+  else if(typeof props === 'boolean') {
+    init = props;
+    props = undefined;
+  }
+
+  var desc = {};
+  for(var p in props) {
+    desc[p] = {
+      value: props[p],
+      writeable: true,
+      enumerable: true,
+      configurable: true
+    };
+  }
+
+  var o = Object.create(proto, desc);
+
+  if(init)
+    o = o.init();
+
+  return o;
+};
 // Blantantly stolen from: https://gist.github.com/1308368
 // Credit to LevelOne and Jed, js gods that they are.
 
@@ -43,11 +69,14 @@ function createUuid(
       );
   return b
  }
-function Dict() {
-  this.items = {};
-}
+var Dict = Thing.create(Object.prototype, {
+  
+  init: function() {
+    this.items = {};
 
-Dict.prototype = {
+    return this;
+  },
+
   prop: function(key) {
     return ':' + key;
   },
@@ -90,8 +119,8 @@ Dict.prototype = {
       return key.substring(1);
     });
   }
-};
-var Trans = Object.create(Dict.prototype, {
+});
+var Trans = Thing.create(Dict, {
 
   add: function() {
     var uuid = createUuid();
@@ -111,14 +140,15 @@ var Trans = Object.create(Dict.prototype, {
       self.del(key);
     });
   }
+ 
 });
 function Client() {
   this.chain = [];
   this.inMulti = false;
   this.returned = [];
 
-  this.trans = Object.create(Trans);
-  this.transMap = Object.create(Trans);
+  this.trans = Thing.create(Trans, true);
+  this.transMap = Thing.create(Trans, true);
 }
 
 Client.prototype = {
@@ -176,12 +206,20 @@ Client.prototype = {
     this.inMulti = false;
 
     this.complete = function() {
-      var returned = this.returned;
+      var self = this,
+          returned = this.returned;
 
       this.complete = null;
       this.chain = null;
       this.returned = [];
-      this.transMap = new Trans();
+
+      this.transMap.keys().forEach(function(key) {
+        var uuid = self.transMap.get(key);
+
+        self.trans.del(uuid);
+      });
+
+      this.transMap = Thing.create(Trans, true);
 
       callback(returned);
     };

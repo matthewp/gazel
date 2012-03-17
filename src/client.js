@@ -3,8 +3,8 @@ function Client() {
   this.inMulti = false;
   this.returned = [];
 
-  this.trans = Object.create(Trans);
-  this.transMap = Object.create(Trans);
+  this.trans = Thing.create(Trans, true);
+  this.transMap = Thing.create(Trans, true);
 }
 
 Client.prototype = {
@@ -62,12 +62,20 @@ Client.prototype = {
     this.inMulti = false;
 
     this.complete = function() {
-      var returned = this.returned;
+      var self = this,
+          returned = this.returned;
 
       this.complete = null;
       this.chain = null;
       this.returned = [];
-      this.transMap = new Trans();
+
+      this.transMap.keys().forEach(function(key) {
+        var uuid = self.transMap.get(key);
+
+        self.trans.del(uuid);
+      });
+
+      this.transMap = Thing.create(Trans, true);
 
       callback(returned);
     };

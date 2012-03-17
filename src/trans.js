@@ -1,4 +1,4 @@
-var Trans = Object.create(Dict.prototype, {
+var Trans = Thing.create(Dict, {
 
   add: function() {
     var uuid = createUuid();
@@ -18,4 +18,5 @@ var Trans = Object.create(Dict.prototype, {
       self.del(key);
     });
   }
+ 
 });
