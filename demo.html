@@ -129,6 +129,10 @@
         function demo() {
           var client = gazel.createClient();
 
+          client.on('error', function(err) {
+            console.log('Oh noes.');
+          });
+
           client.set('Foo', 'bar', gazel.print);
 
           client.multi()

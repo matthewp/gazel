@@ -1,28 +1,45 @@
 function Client() {
+  this.chain = [];
+  this.inMulti = false;
+  this.returned = [];
 
+  this.trans = Thing.create(Trans, true);
+  this.transMap = Thing.create(Dict, true);
+
+  this.events = {};
 }
 
 Client.prototype = {
-  chain: null,
-
-  inMulti: false,
-
-  returned: [],
-
-  events: { },
-
-  register: function(action, callback) {
+  register: function(type, action, callback) {
     if(this.inMulti) {
-      this.chain.push(action);
+      var uuid = this.transMap.get(type);
+      if(!uuid) {
+        uuid = this.trans.add();
+        this.transMap.set(type, uuid);
+      }
+
+      this.chain.push({
+        uuid: uuid,
+        action: action
+      });
 
       return;
     }
 
-    action(callback || function(){});
+    var self = this,
+        uuid = self.trans.add();
+
+    action(uuid, function() {
+      var args = slice.call(arguments);
+
+      self.trans.del(uuid);
+
+      (callback || function(){}).apply(null, args);
+    });
   },
 
   flush: function() {
-    var args = Array.prototype.slice.call(arguments) || [];
+    var args = slice.call(arguments) || [];
 
     this.returned.push(args);
 
@@ -32,7 +49,8 @@ Client.prototype = {
       return;
     }
 
-    this.chain.shift().call(this, this.flush);
+    var item = this.chain.shift();
+    item.action.call(this, item.uuid, this.flush);
   },
 
   multi: function() {
@@ -46,17 +64,26 @@ Client.prototype = {
     this.inMulti = false;
 
     this.complete = function() {
-      var returned = this.returned;
+      var self = this,
+          returned = this.returned;
 
       this.complete = null;
       this.chain = null;
       this.returned = [];
 
+      this.transMap.keys().forEach(function(key) {
+        var uuid = self.transMap.get(key);
+
+        self.trans.del(uuid);
+      });
+
+      this.transMap = Thing.create(Dict, true);
+
       callback(returned);
     };
 
-    var action = this.chain.shift();
-    action.call(this, this.flush);
+    var item = this.chain.shift();
+    item.action.call(this, item.uuid, this.flush);
   },
 
   on: function(eventType, action) {

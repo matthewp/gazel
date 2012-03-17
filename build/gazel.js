@@ -17,31 +17,173 @@ window.indexedDB = window.indexedDB
 window.IDBTransaction = window.IDBTransaction
   || window.webkitIDBTransaction;
 
-function Client() {
+var slice = Array.prototype.slice,
+    splice = Array.prototype.splice;
+var Thing = Object.create(null);
+Thing.create = function(proto, props, init) {
+  if(typeof props === 'undefined' && typeof init === 'undefined')
+    return Object.create(proto);
+  else if(typeof props === 'boolean') {
+    init = props;
+    props = undefined;
+  }
 
+  var desc = {};
+  for(var p in props) {
+    desc[p] = {
+      value: props[p],
+      writeable: true,
+      enumerable: true,
+      configurable: true
+    };
+  }
+
+  var o = Object.create(proto, desc);
+
+  if(init)
+    o = o.init();
+
+  return o;
+};
+// Blantantly stolen from: https://gist.github.com/1308368
+// Credit to LevelOne and Jed, js gods that they are.
+
+function createUuid(
+  a,b                // placeholders
+){
+  for(               // loop :)
+      b=a='';        // b - result , a - numeric variable
+      a++<36;        // 
+      b+=a*51&52  // if "a" is not 9 or 14 or 19 or 24
+                  ?  //  return a random number or 4
+         (
+           a^15      // if "a" is not 15
+              ?      // genetate a random number from 0 to 15
+           8^Math.random()*
+           (a^20?16:4)  // unless "a" is 20, in which case a random number from 8 to 11
+              :
+           4            //  otherwise 4
+           ).toString(16)
+                  :
+         '-'            //  in other cases (if "a" is 9,14,19,24) insert "-"
+      );
+  return b
+ }
+var Dict = Thing.create(Object.prototype, {
+  
+  init: function() {
+    this.items = {};
+
+    return this;
+  },
+
+  prop: function(key) {
+    return ':' + key;
+  },
+
+  get: function(key, def) {
+    var p = this.prop(key),
+        k = this.items;
+
+    return k.hasOwnProperty(p) ? k[p] : def;
+  },
+
+  set: function(key, value) {
+    var p = this.prop(key);
+
+    this.items[p] = value;
+
+    return value;
+  },
+
+  count: function() {
+    return Object.keys(this.items).length;
+  },
+
+  has: function(key) {
+    var p = this.prop(key);
+
+    return this.items.hasOwnProperty(p);
+  },
+
+  del: function(key) {
+    var p = this.prop(key),
+        k = this.items;
+
+    if(k.hasOwnProperty(p))
+      delete k[p];
+  },
+
+  keys: function() {
+    return Object.keys(this.items).map(function(key) {
+      return key.substring(1);
+    });
+  }
+});
+var Trans = Thing.create(Dict, {
+
+  add: function() {
+    var uuid = createUuid();
+    this.set(uuid, undefined);
+
+    return uuid;
+  },
+
+  abortAll: function() {
+    var self = this,
+        keys = self.keys();
+
+    keys.forEach(function(key) {
+      var tx = self.get(key);
+      tx.abort();
+
+      self.del(key);
+    });
+  }
+ 
+});
+function Client() {
+  this.chain = [];
+  this.inMulti = false;
+  this.returned = [];
+
+  this.trans = Thing.create(Trans, true);
+  this.transMap = Thing.create(Dict, true);
+
+  this.events = {};
 }
 
 Client.prototype = {
-  chain: null,
-
-  inMulti: false,
-
-  returned: [],
-
-  events: { },
-
-  register: function(action, callback) {
+  register: function(type, action, callback) {
     if(this.inMulti) {
-      this.chain.push(action);
+      var uuid = this.transMap.get(type);
+      if(!uuid) {
+        uuid = this.trans.add();
+        this.transMap.set(type, uuid);
+      }
+
+      this.chain.push({
+        uuid: uuid,
+        action: action
+      });
 
       return;
     }
 
-    action(callback || function(){});
+    var self = this,
+        uuid = self.trans.add();
+
+    action(uuid, function() {
+      var args = slice.call(arguments);
+
+      self.trans.del(uuid);
+
+      (callback || function(){}).apply(null, args);
+    });
   },
 
   flush: function() {
-    var args = Array.prototype.slice.call(arguments) || [];
+    var args = slice.call(arguments) || [];
 
     this.returned.push(args);
 
@@ -51,7 +193,8 @@ Client.prototype = {
       return;
     }
 
-    this.chain.shift().call(this, this.flush);
+    var item = this.chain.shift();
+    item.action.call(this, item.uuid, this.flush);
   },
 
   multi: function() {
@@ -65,23 +208,35 @@ Client.prototype = {
     this.inMulti = false;
 
     this.complete = function() {
-      var returned = this.returned;
+      var self = this,
+          returned = this.returned;
 
       this.complete = null;
       this.chain = null;
       this.returned = [];
 
+      this.transMap.keys().forEach(function(key) {
+        var uuid = self.transMap.get(key);
+
+        self.trans.del(uuid);
+      });
+
+      this.transMap = Thing.create(Dict, true);
+
       callback(returned);
     };
 
-    var action = this.chain.shift();
-    action.call(this, this.flush);
+    var item = this.chain.shift();
+    item.action.call(this, item.uuid, this.flush);
   },
 
   on: function(eventType, action) {
     var event = this.events[eventType] = this.events[eventType] || [];
     event.push(action);
   }
+};
+Client.prototype.discard = function() {
+  this.trans.abortAll();
 };
 Client.prototype.handleError = function() {
   var args = Array.prototype.slice.call(arguments);
@@ -94,15 +249,25 @@ Client.prototype.handleError = function() {
 Client.prototype.get = function(key, callback) {
   var self = this;
 
-  this.register(function(cb) {
-    openReadable(function(tx) {
+  this.register('read', function(uuid, cb) {
+    openDatabase(function(db) {
+
+      var tx = self.trans.get(uuid);
+      if(!tx) {
+        tx = db.transaction([gazel.osName], IDBTransaction.READ);
+        tx.onerror = onerror;
+
+        self.trans.set(uuid, tx);
+      }
 
       var req = tx.objectStore(gazel.osName).get(key);
       req.onerror = self.handleError.bind(self);
       req.onsuccess = function (e) {
         cb.call(self, e.target.result);
       };
+
     }, self.handleError.bind(self));
+
   }, callback);
 
   return this;
@@ -110,30 +275,48 @@ Client.prototype.get = function(key, callback) {
 Client.prototype.set = function(key, value, callback) {
   var self = this;
 
-  this.register(function(cb) {
-    openWritable(function(tx) {
+  this.register('write', function(uuid, cb) {
+    openDatabase(function(db) {
+
+      var tx = self.trans.get(uuid);
+      if(!tx) {
+        var tx = db.transaction([gazel.osName], IDBTransaction.READ_WRITE);
+        tx.onerror = onerror;
+
+        self.trans.set(uuid, tx);
+      }
+
       var req = tx.objectStore(gazel.osName).put(value, key);
       req.onerror = self.handleError.bind(self);
       req.onsuccess = function (e) {
         cb.call(self, e.target.result);
       };
+
     }, self.handleError.bind(self));
   }, callback);
 
   return this;
 };
-Client.prototype.incrby = function(key, increment, callback) {
-  this.register(function(cb) {
-    this.get(key, function(val) {
-      this.set(key, val + increment, cb);
-    });
+Client.prototype.incr = function(key, by, callback) {
+  var self = this;
+
+  this.register('write', function(uuid, cb) {
+    openDatabase(function(db) {
+
+      var tx = self.trans.get(uuid);
+      if(!tx) {
+        var tx = db.transaction([gazel.osName], IDBTransaction.READ_WRITE);
+        tx.onerror = onerror;
+
+        self.trans.set(uuid, tx);
+      }
+
+      var os = tx.objectStore(gazel.osName);
+
+    }, self.handleError.bind(self));
   }, callback);
 
   return this;
-};
-
-Client.prototype.incr = function(key, callback) {
-  return this.incrby(key, 1, callback);
 };
 Client.prototype.decrby = function(key, increment, callback) {
   return this.incrby(key, -increment, callback);
@@ -221,21 +404,5 @@ function openDatabase(onsuccess, onerror) {
   };
 
   req.onerror = onerror;
-}
-
-function openReadable(onsuccess, onerror) {
-  openDatabase(function (db) {
-    var tx = db.transaction([gazel.osName], IDBTransaction.READ);
-    tx.onerror = onerror;
-    onsuccess(tx);
-  }, onerror);
-}
-
-function openWritable(onsuccess, onerror) {
-  openDatabase(function (db) {
-    var tx = db.transaction([gazel.osName], IDBTransaction.READ_WRITE);
-    tx.onerror = onerror;
-    onsuccess(tx);
-  }, onerror);
 }
 }).call(this);

@@ -13,3 +13,5 @@ window.indexedDB = window.indexedDB
 window.IDBTransaction = window.IDBTransaction
   || window.webkitIDBTransaction;
 
+var slice = Array.prototype.slice,
+    splice = Array.prototype.splice;

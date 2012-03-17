@@ -56,19 +56,3 @@ function openDatabase(onsuccess, onerror) {
 
   req.onerror = onerror;
 }
-
-function openReadable(onsuccess, onerror) {
-  openDatabase(function (db) {
-    var tx = db.transaction([gazel.osName], IDBTransaction.READ);
-    tx.onerror = onerror;
-    onsuccess(tx);
-  }, onerror);
-}
-
-function openWritable(onsuccess, onerror) {
-  openDatabase(function (db) {
-    var tx = db.transaction([gazel.osName], IDBTransaction.READ_WRITE);
-    tx.onerror = onerror;
-    onsuccess(tx);
-  }, onerror);
-}
