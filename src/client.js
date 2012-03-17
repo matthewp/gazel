@@ -5,6 +5,8 @@ function Client() {
 
   this.trans = Thing.create(Trans, true);
   this.transMap = Thing.create(Dict, true);
+
+  this.events = {};
 }
 
 Client.prototype = {
