@@ -4,7 +4,7 @@ function Client() {
   this.returned = [];
 
   this.trans = Thing.create(Trans, true);
-  this.transMap = Thing.create(Trans, true);
+  this.transMap = Thing.create(Dict, true);
 }
 
 Client.prototype = {
@@ -75,7 +75,7 @@ Client.prototype = {
         self.trans.del(uuid);
       });
 
-      this.transMap = Thing.create(Trans, true);
+      this.transMap = Thing.create(Dict, true);
 
       callback(returned);
     };
