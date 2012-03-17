@@ -4,14 +4,8 @@ Client.prototype.set = function(key, value, callback) {
   this.register('write', function(uuid, cb) {
     openDatabase(function(db) {
 
-      var tx = self.trans.get(uuid);
-      if(!tx) {
-        var tx = db.transaction([gazel.osName], IDBTransaction.READ_WRITE);
-        tx.onerror = onerror;
-
-        self.trans.set(uuid, tx);
-      }
-
+      var tx = self.trans.pull(db, uuid, IDBTransaction.READ_WRITE);
+      
       var req = tx.objectStore(gazel.osName).put(value, key);
       req.onerror = self.handleError.bind(self);
       req.onsuccess = function (e) {
