@@ -42,7 +42,7 @@ describe('Set', function() {
   it('should always accept an object', function(done) {
     var obj = {
       foo: 'bar',
-      fee: function() { return 'fo'; }
+      fee: 'fo'
     };
       
     client.set('fee', obj, isOk(done));
