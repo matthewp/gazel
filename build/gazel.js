@@ -21,30 +21,58 @@ var slice = Array.prototype.slice,
     splice = Array.prototype.splice;
 var Thing = Object.create(null);
 Thing.create = function(proto, props, init) {
-  if(typeof props === 'undefined' && typeof init === 'undefined')
+  if(typeof props === 'undefined'
+      && typeof init === 'undefined'
+      && !(proto instanceof Array))
     return Object.create(proto);
   else if(typeof props === 'boolean') {
     init = props;
     props = undefined;
   }
 
+  if(!(proto instanceof Array))
+    proto = [ proto ];
+
   var desc = {};
   for(var p in props) {
     desc[p] = {
       value: props[p],
-      writeable: true,
+      writable: true,
       enumerable: true,
       configurable: true
     };
   }
 
-  var o = Object.create(proto, desc);
+  var o, baseDesc = {}, base = proto.pop();
+  do {
+   var par = proto.pop();
 
-  if(init)
-    o = o.init();
+   if(par) {
+     var all = {};
+     for(var p in base) {
+      all[p] = base[p];
 
+      baseDesc[p] = Object.getOwnPropertyDescriptor(all, p);
+     }
+
+     base = Object.create(par, baseDesc);
+   }
+  } while(proto.length > 0);
+
+  o = Object.create(base, desc);
+
+  if(init) {
+    var args = Array.prototype.slice.call(arguments)
+                .slice(typeof props === 'undefined' ? 2 : 3);
+
+    o.init.apply(o, args);
+  }
+ 
   return o;
 };
+
+if(typeof exports !== 'undefined')
+  exports.create = Thing.create;
 // Blantantly stolen from: https://gist.github.com/1308368
 // Credit to LevelOne and Jed, js gods that they are.
 

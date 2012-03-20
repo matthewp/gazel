@@ -1,0 +1,4 @@
+
+[submodule "libs/thingjs"]
+	path = libs/thingjs
+	url = https://github.com/matthewp/thingjs.git

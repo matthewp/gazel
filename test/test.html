@@ -1,0 +1,24 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Gazel Tests</title>
+  <link rel="stylesheet" href="test/res/mocha.css" />
+  <script src="test/res/assert.js"></script>
+  <script src="test/res/mocha.js"></script>
+  <script src="build/gazel.js"></script>
+  <script>
+    mocha.setup('bdd');
+  </script>
+  <script src="test/set.js"></script>
+  <script>
+    window.addEventListener('load', function onLoad() {
+      window.removeEventListener('load', onLoad);
+
+      mocha.run();
+    });
+  </script>
+</head>
+<body>
+  <div id="mocha"></div>
+</body>
+</html>
