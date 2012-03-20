@@ -1,4 +1,5 @@
 describe('Set', function() {
+  'use strict';
 
   var isOk = function(done) {
     return function(res) {
@@ -11,7 +12,7 @@ describe('Set', function() {
     client = gazel.createClient();
   });
 
-  maxInt = 9007199254740992;
+  var maxInt = 9007199254740992;
 
   it('should always return OK for strings', function(done) {
     client.set('foo', 'bar', function(res) {
