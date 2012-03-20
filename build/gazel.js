@@ -322,7 +322,8 @@ Client.prototype.set = function(key, value, callback) {
       var req = tx.objectStore(gazel.osName).put(value, key);
       req.onerror = self.handleError.bind(self);
       req.onsuccess = function (e) {
-        cb.call(self, e.target.result);
+        var res = e.target.result === key ? 'OK' : 'ERR';
+        cb.call(self, res);
       };
 
     }, self.handleError.bind(self));
