@@ -7,11 +7,12 @@ Client.prototype.incrby = function(key, increment, callback) {
       var tx = self.trans.pull(db, uuid, IDBTransaction.READ_WRITE);
       var os = tx.objectStore(gazel.osName);
       (function curl(val) {
-        if(!val) {
+        if(!exists(val)) {
           var req = os.get(key);
           req.onerror = self.handleError.bind(self);
           req.onsuccess = function(e) {
-          curl(e.target.result);
+            curl(typeof e.target.result === 'undefined'
+              ? 0 : e.target.result);
           };
 
           return;
@@ -21,7 +22,8 @@ Client.prototype.incrby = function(key, increment, callback) {
         var req = os.put(value, key);
         req.onerror = self.handleError.bind(self);
         req.onsuccess = function (e) {
-          cb.call(self, e.target.result);
+          var res = e.target.result === key ? value : "ERR";
+          cb.call(self, res);
         };
 
       })();

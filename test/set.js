@@ -7,11 +7,7 @@ describe('Set', function() {
     };
   };
 
-  var client;
-  before(function() {
-    client = gazel.createClient();
-  });
-
+  var client = gazel.createClient();
   var maxInt = 9007199254740992;
 
   it('should always return OK for strings', function(done) {
