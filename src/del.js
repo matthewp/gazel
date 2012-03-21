@@ -17,10 +17,7 @@ Client.prototype.del = function() {
       
       var os = tx.objectStore(gazel.osName),
           left = keys.length,
-          deleted = 0,
-          exit = function() {
-            cb.call(self, deleted);
-          };
+          deleted = 0;
 
       while(keys.length > 0) {
 
@@ -35,13 +32,10 @@ Client.prototype.del = function() {
           if(e.target.result) deleted++;
           
           if(left === 0)
-            exit();
+            cb.call(self, deleted);
         };
         })();
-
      }
-
-
     });
   }, callback);
 
