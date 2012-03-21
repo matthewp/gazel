@@ -8,6 +8,10 @@ var exists = function (obj) {
   return typeof obj !== 'undefined' && obj != null;
 };
 
+var isInt = function(n) {
+  return !isNaN(n) && (n % 1 == 0);
+};
+
 window.indexedDB = window.indexedDB
   || window.mozIndexedDB
   || window.msIndexedDB
@@ -347,6 +351,12 @@ Client.prototype.incrby = function(key, increment, callback) {
             curl(typeof e.target.result === 'undefined'
               ? 0 : e.target.result);
           };
+
+          return;
+        }
+
+        if(!isInt(val)) {
+          self.handleError('ERROR: Cannot increment a non-integer value.');
 
           return;
         }

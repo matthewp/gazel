@@ -4,6 +4,10 @@ var exists = function (obj) {
   return typeof obj !== 'undefined' && obj != null;
 };
 
+var isInt = function(n) {
+  return !isNaN(n) && (n % 1 == 0);
+};
+
 window.indexedDB = window.indexedDB
   || window.mozIndexedDB
   || window.msIndexedDB

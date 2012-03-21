@@ -64,8 +64,14 @@ describe('Incr/Decr', function() {
   });
 
   it('should return error if incrementing string', function(done) {
+    var errClient = gazel.createClient();
+
+    errClient.on('error', function(msg) {
+      done(assert.ok(true));
+    });
+
     set('foo', 'bar', function() {
-      client.incr('foo', function(res) {
+      errClient.incr('foo', function(res) {
         done(assert.ok(false, 'We should not get here.'));
       });
     });
