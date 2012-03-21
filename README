@@ -1,1 +1,3 @@
-gazel, javascript data store
+Gazel is a key/value data store for the browser, backed by IndexedDB.
+
+Documentation at: http://code.matthewphillips.info/gazel
