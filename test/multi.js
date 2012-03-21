@@ -74,10 +74,9 @@ describe('Multi', function() {
         .incr('m_p_1')
         .discard(function(res) {
           var isOK = res === 'OK',
-              incrRolled = res[1][0] === 1,
-              setRolled = typeof res[0][0] === 'undefined';
+              noTrans = mClient.trans.count() === 0;
 
-          done(assert.ok(isOK && incrRolled && setRolled));
+          done(assert.ok(isOK && noTrans));
         });
     });
   });
