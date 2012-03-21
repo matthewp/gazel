@@ -56,8 +56,10 @@ describe('Incr/Decr', function() {
   });
 
   it('incr should set value to 1 if value not existant', function(done) {
-    client.incr('notexists', function(res) {
-      done(assert.equal(res, 1));
+    client.del('notexists', function(resp) {
+      client.incr('notexists', function(res) {
+        done(assert.equal(res, 1));
+      });
     });
   });
 
