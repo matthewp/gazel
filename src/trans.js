@@ -13,7 +13,8 @@ var Trans = Thing.create(Dict, {
 
     keys.forEach(function(key) {
       var tx = self.get(key);
-      tx.abort();
+      if(tx)
+        tx.abort();
 
       self.del(key);
     });

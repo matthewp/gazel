@@ -37,6 +37,49 @@ describe('Multi', function() {
 
     done(assert.equal(fee, 11));
   });
-  
+
+  it('discarded transactions should always return OK', function(done) {
+    var mClient = gazel.createClient();
+
+    mClient.multi()
+      .get('foo')
+      .discard(function(res) {
+        done(assert.equal(res, 'OK'));
+      });
+  });
+
+  it('created items should be gone when discarded.', function(done) {
+    var mClient = gazel.createClient(),
+        multi = mClient.multi();
+
+    multi.set('m_1', 1)
+      .set('m_2', 1)
+      .set('m_3', 1)
+      .discard(function(res) {
+        done(assert.equal(res, 'OK'));
+      });
+  });
+
+  it('previous values should roll back after a discard.', function(done) {
+    var mClient = gazel.createClient();
+
+    mClient.set('m_p_1', 1, function(setRes) {
+      if(setRes !== 'OK') {
+        done(assert.ok(false, 'Initial set didn\'t take.'));
+        return;
+      }
+
+      mClient.multi()
+        .set('m_p_2', 1)
+        .incr('m_p_1')
+        .discard(function(res) {
+          var isOK = res === 'OK',
+              incrRolled = res[1][0] === 1,
+              setRolled = typeof res[0][0] === 'undefined';
+
+          done(assert.ok(isOK && incrRolled && setRolled));
+        });
+    });
+  });
 
 });

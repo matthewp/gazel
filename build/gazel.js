@@ -167,7 +167,8 @@ var Trans = Thing.create(Dict, {
 
     keys.forEach(function(key) {
       var tx = self.get(key);
-      tx.abort();
+      if(tx)
+        tx.abort();
 
       self.del(key);
     });
@@ -284,8 +285,14 @@ Client.prototype = {
     event.push(action);
   }
 };
-Client.prototype.discard = function() {
-  this.trans.abortAll();
+Client.prototype.discard = function(callback) {
+  try {
+    this.trans.abortAll();
+
+    (callback || function(){})('OK');
+  } catch(err) {
+    this.handleError(err);
+  }
 };
 Client.prototype.handleError = function() {
   var args = Array.prototype.slice.call(arguments);
