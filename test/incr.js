@@ -76,4 +76,16 @@ describe('Incr/Decr', function() {
       });
     });
   });
+
+  it('should return error if incrementing decimal', function(done) {
+    var decClient = gazel.createClient();
+
+    decClient.on('error', function(msg) {
+      done(assert.ok(true));
+    });
+
+    decClient.incrby('foo', 2.3, function(res) {
+      done(assert.ok(false, 'We should not get here.'));
+    });
+  });
 });
