@@ -173,45 +173,88 @@
       <h2>Commands</h2>
       <div class="command">
         <h3>get</h3>
+        <p>Get the value of a key.</p>
         <ul>
           <li><span class="arg">key</span>: String key.</li>
-          <li><span class="arg">callback</span>: Function callback in case of success.</li>
+          <li><span class="arg">callback</span>: Function callback in case of success. Argument is the key's value.</li>
         </ul>
       </div>
       <div class="command">
         <h3>set</h3>
+        <p>Set the value of a key.</p>
         <ul>
           <li><span class="arg">key</span>: String key.</li>
           <li><span class="arg">value</span>: Object value being set.</li>
-          <li><span class="arg">callback</span>: Function callback in case of success.</li>
+          <li><span class="arg">callback</span>: Function callback in case of success. Includes one argument, which should always have the value of OK.</li>
+        </ul>
+      </div>
+      <div class="command">
+        <h3>del</h3>
+        <p>Delete a key, or series of keys.</p>
+        <ul>
+          <li><span class="arg">key(s)</span>: String key, or a series of arguments for multiple string keys.</li>
+          <li><span class="arg">callback</span>: Function callback in case of success. Argument includes the number of keys deleted.</li>
         </ul>
       </div>
       <div class="command">
         <h3>incr</h3>
+        <p>Increment a key by 1. They key's value must be an integer. If the key does not exist, it will be created and assigned the value of 1.</p>
+        <ul>
+          <li><span class="arg">key</span>: String key</li>
+          <li><span class="arg">callback</span>: Function callback in case of success.
+        </ul>
+      </div>
+      <div class="command">
+        <h3>incrby</h3>
+        <p>Increment a key by a given increment. They key's value must be an integer. If the key does not exist, it will be created and assigned the value of increment.</p>
         <ul>
           <li><span class="arg">key</span>: String key.</li>
-          <li><span class="arg">by</span>: Number to add to current value.</li>
+          <li><span class="arg">increment</span>: Number to add to current value.</li>
+          <li><span class="arg">callback</span>: Function callback in case of success.</li>
+        </ul>
+      </div>
+      <div class="command">
+        <h3>decr</h3>
+        <p>Decrement a key by a value of 1. The key's value must be an integer. If the key does not exist, it will be created with a value of -1.</p>
+        <ul>
+          <li><span class="arg">key</span>: String key.</li>
+          <li><span class="arg">callback</span>: Function callback in case of success.</li>
+        </ul>
+      </div>
+      <div class="command">
+        <h3>decrby</h3>
+        <p>Decrement a key by a given decrement. The key's value must be an integer. If the key does not exist, it will be created with a value of decrement.</p>
+        <ul>
+          <li><span class="arg">key</span>: String key</li>
+          <li><span class="arg">decrement</span>: Number to subtract from teh current value.</li>
           <li><span class="arg">callback</span>: Function callback in case of success.</li>
         </ul>
       </div>
       <div class="command">
         <h3>multi</h3>
-        Start the beginning of a chaining operation.
+        <p>Initiate the start of a chaining operation.</p>
       </div>
       <div class="command">
         <h3>exec</h3>
-        Execute a chain of commands.
+        <p>Execute a chain of commands.</p>
         <ul>
           <li><span class="arg">callback</span>: Function callback in case of success. Called when chaining is complete, fed a results array, containing arrays of all of the results.</li>
         </ul>
       </div>
+      <div class="command">
+        <h3>discard</h3>
+        <p>Abort a transaction in process.</p>
+        <ul>
+          <li><span class="arg">callback</span>: Function callback, called after discarding the transactions in process.</li>
+        </ul>
     </article>
     <article>
       <h2>Plans</h2>
       <ul>
         <li>Steal more Redis commands. !important</li>
         <li>Web SQL fallback.</li>
-        <li>Use common transaction on chained commands.</li>
+        <li>Wider test coverage.</li>
+        <li>Allow for multiple databases.</li>
         <li>Get hired by a company who lets me work on Gazel full time.</li>
       </ul>
     </article>
