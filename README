@@ -1,3 +1,7 @@
 Gazel is a key/value data store for the browser, backed by IndexedDB.
 
-Documentation at: http://code.matthewphillips.info/gazel
+Run some tests, vows test/*
+
+Write some tests, find bugs!  Pull requests welcome.
+
+Documentation at: http://gazeljs.org
