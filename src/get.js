@@ -4,7 +4,7 @@ Client.prototype.get = function(key, callback) {
   this.register('read', function(uuid, cb) {
     openDatabase(function(db) {
 
-      var tx = self.trans.pull(db, uuid, IDBTransaction.READ);
+      var tx = self.trans.pull(db, uuid, IDBTransaction.READ_ONLY);
 
       var req = tx.objectStore(gazel.osName).get(key);
       req.onerror = self.handleError.bind(self);
