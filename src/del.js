@@ -20,20 +20,18 @@ Client.prototype.del = function() {
           deleted = 0;
 
       while(keys.length > 0) {
-
         (function() {
-
-        var key = keys.shift();
-        var req = os.delete(key);
-        req.onerror = self.handleError.bind(self);
-        req.onsuccess = function(e) {
-          left--;
-          
-          if(e.target.result) deleted++;
-          
-          if(left === 0)
-            cb.call(self, deleted);
-        };
+          var key = keys.shift();
+          var req = os.delete(key);
+          req.onerror = self.handleError.bind(self);
+          req.onsuccess = function(e) {
+            left--;
+            
+            if(e.target.result) deleted++;
+            
+            if(left === 0)
+              cb.call(self, deleted);
+          };
         })();
      }
     });
