@@ -23,16 +23,7 @@ describe('Del', function() {
       return res === 1;
     });
   });
-
-  it('doesn\'t delete non-existing keys', function(done) {
-    // Delete it once to clear clutter.
-    client.del('unreal', function(first) {
-      client.del('unreal', function(sec) {
-        done(assert.equal(sec, 0));
-      });
-    });
-  });
-
+  
   it('deletes multiple keys if given', function(done) {
     var keys = [ 'del_one', 'del_two', 'del_three' ];
     var mClient = gazel.createClient(),
