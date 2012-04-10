@@ -295,12 +295,12 @@ Client.prototype.discard = function(callback) {
   }
 };
 Client.prototype.handleError = function() {
-  var args = Array.prototype.slice.call(arguments);
+  var args = slice.call(arguments);
 
-  var actions = this.events.get('error') || [];
-  actions.forEach(function(action) {
-    action.apply(null, args);
-  });
+  (this.events.get('error') || [])
+    .forEach(function(action) {
+      action.apply(null, args);
+    });
 };
 Client.prototype.get = function(key, callback) {
   var self = this;
