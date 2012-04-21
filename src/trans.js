@@ -5,14 +5,14 @@ function Trans() {
 Trans.prototype = Dict.prototype;
 Trans.prototype.constructor = Trans;
 
-Trans.prototype.add: function() {
+Trans.prototype.add = function() {
   var uuid = createUuid();
   this.set(uuid, undefined);
 
   return uuid;
 }
 
-Trans.prototype.abortAll: function() {
+Trans.prototype.abortAll = function() {
   var self = this,
       keys = self.keys();
 
@@ -25,7 +25,7 @@ Trans.prototype.abortAll: function() {
   });
 };
 
-Trans.prototype.pull: function(db, uuid, perm) {
+Trans.prototype.pull = function(db, uuid, perm) {
   var tx = this.get(uuid);
   if(!tx) {
     tx = db.transaction([gazel.osName], perm);
