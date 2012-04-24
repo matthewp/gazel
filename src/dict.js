@@ -1,5 +1,5 @@
 function Dict() {
-    this.items = {};
+  this.items = {};
 }
 
 Dict.prototype = {
