@@ -1,10 +1,8 @@
-var Dict = Thing.create(Object.prototype, {
-  
-  init: function() {
+function Dict() {
     this.items = {};
+}
 
-    return this;
-  },
+Dict.prototype = {
 
   prop: function(key) {
     return ':' + key;
@@ -48,4 +46,5 @@ var Dict = Thing.create(Object.prototype, {
       return key.substring(1);
     });
   }
-});
+
+};

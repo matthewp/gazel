@@ -3,10 +3,10 @@ function Client() {
   this.inMulti = false;
   this.returned = [];
 
-  this.trans = Thing.create(Trans, true);
-  this.transMap = Thing.create(Dict, true);
+  this.trans = new Trans();
+  this.transMap = new Dict();
 
-  this.events = Thing.create(Dict, true);
+  this.events = new Dict();
 }
 
 Client.prototype = {
@@ -77,7 +77,7 @@ Client.prototype = {
         self.trans.del(uuid);
       });
 
-      this.transMap = Thing.create(Dict, true);
+      this.transMap = new Dict();
 
       callback(returned);
     };

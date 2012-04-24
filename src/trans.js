@@ -1,35 +1,38 @@
-var Trans = Thing.create(Dict, {
+function Trans() {
+  Dict.call(this);
+}
 
-  add: function() {
-    var uuid = createUuid();
-    this.set(uuid, undefined);
+Trans.prototype = Dict.prototype;
+Trans.prototype.constructor = Trans;
 
-    return uuid;
-  },
+Trans.prototype.add: function() {
+  var uuid = createUuid();
+  this.set(uuid, undefined);
 
-  abortAll: function() {
-    var self = this,
-        keys = self.keys();
+  return uuid;
+}
 
-    keys.forEach(function(key) {
-      var tx = self.get(key);
-      if(tx)
-        tx.abort();
+Trans.prototype.abortAll: function() {
+  var self = this,
+      keys = self.keys();
 
-      self.del(key);
-    });
-  },
+  keys.forEach(function(key) {
+    var tx = self.get(key);
+    if(tx)
+      tx.abort();
 
-  pull: function(db, uuid, perm) {
-    var tx = this.get(uuid);
-    if(!tx) {
-      tx = db.transaction([gazel.osName], perm);
-      tx.onerror = onerror;
+    self.del(key);
+  });
+};
 
-      this.set(uuid, tx);
-    }
+Trans.prototype.pull: function(db, uuid, perm) {
+  var tx = this.get(uuid);
+  if(!tx) {
+    tx = db.transaction([gazel.osName], perm);
+    tx.onerror = onerror;
 
-    return tx;
+    this.set(uuid, tx);
   }
- 
-});
+
+  return tx;
+};

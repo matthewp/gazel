@@ -23,60 +23,6 @@ window.IDBTransaction = window.IDBTransaction
 
 var slice = Array.prototype.slice,
     splice = Array.prototype.splice;
-var Thing = Object.create(null);
-Thing.create = function(proto, props, init) {
-  if(typeof props === 'undefined'
-      && typeof init === 'undefined'
-      && !(proto instanceof Array))
-    return Object.create(proto);
-  else if(typeof props === 'boolean') {
-    init = props;
-    props = undefined;
-  }
-
-  if(!(proto instanceof Array))
-    proto = [ proto ];
-
-  var desc = {};
-  for(var p in props) {
-    desc[p] = {
-      value: props[p],
-      writable: true,
-      enumerable: true,
-      configurable: true
-    };
-  }
-
-  var o, baseDesc = {}, base = proto.pop();
-  do {
-   var par = proto.pop();
-
-   if(par) {
-     var all = {};
-     for(var p in base) {
-      all[p] = base[p];
-
-      baseDesc[p] = Object.getOwnPropertyDescriptor(all, p);
-     }
-
-     base = Object.create(par, baseDesc);
-   }
-  } while(proto.length > 0);
-
-  o = Object.create(base, desc);
-
-  if(init) {
-    var args = Array.prototype.slice.call(arguments)
-                .slice(typeof props === 'undefined' ? 2 : 3);
-
-    o.init.apply(o, args);
-  }
- 
-  return o;
-};
-
-if(typeof exports !== 'undefined')
-  exports.create = Thing.create;
 // Blantantly stolen from: https://gist.github.com/1308368
 // Credit to LevelOne and Jed, js gods that they are.
 
@@ -101,13 +47,11 @@ function createUuid(
       );
   return b
  }
-var Dict = Thing.create(Object.prototype, {
-  
-  init: function() {
+function Dict() {
     this.items = {};
+}
 
-    return this;
-  },
+Dict.prototype = {
 
   prop: function(key) {
     return ':' + key;
@@ -151,51 +95,55 @@ var Dict = Thing.create(Object.prototype, {
       return key.substring(1);
     });
   }
-});
-var Trans = Thing.create(Dict, {
 
-  add: function() {
-    var uuid = createUuid();
-    this.set(uuid, undefined);
+};
+function Trans() {
+  Dict.call(this);
+}
 
-    return uuid;
-  },
+Trans.prototype = Dict.prototype;
+Trans.prototype.constructor = Trans;
 
-  abortAll: function() {
-    var self = this,
-        keys = self.keys();
+Trans.prototype.add: function() {
+  var uuid = createUuid();
+  this.set(uuid, undefined);
 
-    keys.forEach(function(key) {
-      var tx = self.get(key);
-      if(tx)
-        tx.abort();
+  return uuid;
+}
 
-      self.del(key);
-    });
-  },
+Trans.prototype.abortAll: function() {
+  var self = this,
+      keys = self.keys();
 
-  pull: function(db, uuid, perm) {
-    var tx = this.get(uuid);
-    if(!tx) {
-      tx = db.transaction([gazel.osName], perm);
-      tx.onerror = onerror;
+  keys.forEach(function(key) {
+    var tx = self.get(key);
+    if(tx)
+      tx.abort();
 
-      this.set(uuid, tx);
-    }
+    self.del(key);
+  });
+};
 
-    return tx;
+Trans.prototype.pull: function(db, uuid, perm) {
+  var tx = this.get(uuid);
+  if(!tx) {
+    tx = db.transaction([gazel.osName], perm);
+    tx.onerror = onerror;
+
+    this.set(uuid, tx);
   }
- 
-});
+
+  return tx;
+};
 function Client() {
   this.chain = [];
   this.inMulti = false;
   this.returned = [];
 
-  this.trans = Thing.create(Trans, true);
-  this.transMap = Thing.create(Dict, true);
+  this.trans = new Trans();
+  this.transMap = new Dict();
 
-  this.events = Thing.create(Dict, true);
+  this.events = new Dict();
 }
 
 Client.prototype = {
@@ -266,7 +214,7 @@ Client.prototype = {
         self.trans.del(uuid);
       });
 
-      this.transMap = Thing.create(Dict, true);
+      this.transMap = new Dict();
 
       callback(returned);
     };
