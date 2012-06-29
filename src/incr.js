@@ -4,8 +4,8 @@ Client.prototype.incrby = function(key, increment, callback) {
   this.register('write', function(uuid, cb) {
     openDatabase(function(db) {
 
-      var tx = self.trans.pull(db, uuid, IDBTransaction.READ_WRITE);
-      var os = tx.objectStore(gazel.osName);
+      var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_WRITE);
+      var os = tx.objectStore(self.osName);
       (function curl(val) {
         if(!exists(val)) {
           var req = os.get(key);

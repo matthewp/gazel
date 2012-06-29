@@ -25,10 +25,10 @@ Trans.prototype.abortAll = function() {
   });
 };
 
-Trans.prototype.pull = function(db, uuid, perm) {
+Trans.prototype.pull = function(db, os, uuid, perm) {
   var tx = this.get(uuid);
   if(!tx) {
-    tx = db.transaction([gazel.osName], perm);
+    tx = db.transaction([os], perm);
     tx.onerror = onerror;
 
     this.set(uuid, tx);

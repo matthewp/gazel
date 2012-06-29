@@ -14,8 +14,8 @@ Client.prototype.del = function() {
   this.register('write', function(uuid, cb) {
     openDatabase(function(db) {
      
-      var tx = self.trans.pull(db, uuid, IDBTransaction.READ_WRITE),
-          os = tx.objectStore(gazel.osName),
+      var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_WRITE),
+          os = tx.objectStore(self.osName),
           left = keys.length;
 
       while(keys.length > 0) {
