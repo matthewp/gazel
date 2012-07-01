@@ -56,3 +56,11 @@ function openDatabase(onsuccess, onerror) {
 
   req.onerror = onerror;
 }
+
+function ensureObjectStore(osName, callback) {
+  openDatabase(function(db) {
+    if(!db.objectStoreNames.contains(osName)) {
+      db.createObjectStore(osName);
+    }
+  });
+}
