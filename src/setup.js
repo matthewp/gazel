@@ -17,5 +17,8 @@ window.indexedDB = window.indexedDB
 window.IDBTransaction = window.IDBTransaction
   || window.webkitIDBTransaction;
 
+window.IDBTransaction.READ_ONLY = window.IDBTransaction.READ_ONLY || 'readonly';
+window.IDBTransaction.READ_WRITE = window.IDBTransaction.READ_WRITE || 'readwrite';
+
 var slice = Array.prototype.slice,
     splice = Array.prototype.splice;

@@ -1,7 +1,6 @@
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
 
 (function() {
-'use strict';
 var gazel = gazel || {};
 
 var exists = function (obj) {
@@ -20,6 +19,9 @@ window.indexedDB = window.indexedDB
 
 window.IDBTransaction = window.IDBTransaction
   || window.webkitIDBTransaction;
+
+window.IDBTransaction.READ_ONLY = window.IDBTransaction.READ_ONLY || 'readonly';
+window.IDBTransaction.READ_WRITE = window.IDBTransaction.READ_WRITE || 'readwrite';
 
 var slice = Array.prototype.slice,
     splice = Array.prototype.splice;
