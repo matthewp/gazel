@@ -425,8 +425,8 @@ this.gazel = gazel;
 var db;
 var loadingDb = false;
 
-function openDatabase(onsuccess, onerror) {
-  if(db) {
+function openDatabase(onsuccess, onerror, onupgrade) {
+  if(db && db.version == gazel.version) {
     onsuccess(db);
     return;
   }
@@ -447,6 +447,9 @@ function openDatabase(onsuccess, onerror) {
 
     if(!uDb.objectStoreNames.contains(gazel.osName))
       uDb.createObjectStore(gazel.osName);
+
+    if(onupgrade)
+      upgrade(uDb);
   };
 
   var reqSuccess;
@@ -482,9 +485,14 @@ function openDatabase(onsuccess, onerror) {
 }
 
 function ensureObjectStore(osName, callback) {
-  openDatabase(function(db) {
+  gazel.version++;
+
+  openDatabase(function() {
+    callback();
+  }, null, function(db) {
     if(!db.objectStoreNames.contains(osName)) {
       db.createObjectStore(osName);
     }
   });
-}}).call(this);
+}
+}).call(this);
