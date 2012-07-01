@@ -18,7 +18,7 @@ Client.prototype = {
         self.needsOsVerification = false;
 
         self.register(type, action, callback);
-      });
+      }, this.handleError.bind(this));
 
       return;
     }

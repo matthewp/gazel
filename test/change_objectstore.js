@@ -4,6 +4,10 @@ describe('Changed Object Store', function() {
   var osName = 'foo',
       client = gazel.createClient(osName);
 
+  client.on('error', function(err) {
+    throw err;
+  });
+
   var isTrue = function(done) {
     return function(truthy) {
       done(assert.ok(truthy, 'Not the case'));

@@ -157,7 +157,7 @@ Client.prototype = {
         self.needsOsVerification = false;
 
         self.register(type, action, callback);
-      });
+      }, this.handleError.bind(this));
 
       return;
     }
@@ -449,7 +449,7 @@ function openDatabase(onsuccess, onerror, onupgrade) {
       uDb.createObjectStore(gazel.osName);
 
     if(onupgrade)
-      upgrade(uDb);
+      onupgrade(uDb);
   };
 
   var reqSuccess;
@@ -457,6 +457,9 @@ function openDatabase(onsuccess, onerror, onupgrade) {
     var sDb = e.target.result;
 
     if (sDb.setVersion && Number(sDb.version) !== gazel.version) {
+      if(db)
+        db.close();
+
       var dbReq = sDb.setVersion(String(gazel.version));
       dbReq.onsuccess = function (e2) {
         var e3 = {}; e3.target = {};
@@ -484,12 +487,12 @@ function openDatabase(onsuccess, onerror, onupgrade) {
   req.onerror = onerror;
 }
 
-function ensureObjectStore(osName, callback) {
+function ensureObjectStore(osName, callback, errback) {
   gazel.version++;
 
   openDatabase(function() {
     callback();
-  }, null, function(db) {
+  }, errback, function(db) {
     if(!db.objectStoreNames.contains(osName)) {
       db.createObjectStore(osName);
     }
