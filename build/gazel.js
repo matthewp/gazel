@@ -150,7 +150,17 @@ function Client() {
 
 Client.prototype = {
   register: function(type, action, callback) {
-    var uuid;
+    var uuid, self = this;
+
+    if(this.needsOsVerification) {
+      ensureObjectStore(this.osName, function() {
+        self.needsOsVerification = false;
+
+        self.register(type, action, callback);
+      });
+
+      return;
+    }
 
     if(this.inMulti) {
       uuid = this.transMap.get(type);
@@ -167,7 +177,6 @@ Client.prototype = {
       return;
     }
 
-    var self = this;
     uuid = self.trans.add();
 
     action(uuid, function() {
@@ -403,7 +412,11 @@ gazel.compatible = exists(window.indexedDB)
 
 gazel.createClient = function(osName) {
   var client = new Client;
+
   client.osName = osName || gazel.osName;
+  if(osName) {
+    client.needsOsVerification = true;
+  }
 
   return client;
 };
@@ -467,4 +480,11 @@ function openDatabase(onsuccess, onerror) {
 
   req.onerror = onerror;
 }
-}).call(this);
+
+function ensureObjectStore(osName, callback) {
+  openDatabase(function(db) {
+    if(!db.objectStoreNames.contains(osName)) {
+      db.createObjectStore(osName);
+    }
+  });
+}}).call(this);
