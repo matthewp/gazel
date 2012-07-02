@@ -498,4 +498,5 @@ function ensureObjectStore(osName, callback, errback) {
     }
   });
 }
+
 }).call(this);
