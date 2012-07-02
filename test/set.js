@@ -10,9 +10,13 @@ describe('Set', function() {
   var client = gazel.createClient();
   var maxInt = 9007199254740992;
 
+  client.on('error', function(err) {
+    throw err;
+  });
+
   it('should always return OK for strings', function(done) {
     client.set('foo', 'bar', function(res) {
-      isOk(done)(res); 
+      isOk(done)(res);
     });
   });
 
@@ -41,7 +45,7 @@ describe('Set', function() {
       foo: 'bar',
       fee: 'fo'
     };
-      
+
     client.set('fee', obj, isOk(done));
   });
 });

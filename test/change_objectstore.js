@@ -24,6 +24,9 @@ describe('Changed Object Store', function() {
 
   it('should return ints when set as ints', function(done) {
     var val = 45;
+
+    gazel.dbName = "gazel" + new Date;
+
     setGet(done, 'foo', val, function(setRep, getRep) {
       return getRep === val;
     });

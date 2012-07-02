@@ -111,7 +111,7 @@ Trans.prototype.add = function() {
   this.set(uuid, undefined);
 
   return uuid;
-}
+};
 
 Trans.prototype.abortAll = function() {
   var self = this,
@@ -403,9 +403,23 @@ gazel.print = function() {
       console.log(item);
     });
 };
-gazel.version = 1;
 gazel.dbName = "gazeldb";
 gazel.osName = "gazelos";
+
+var VERSION_KEY = "_gazel.version",
+    version = localStorage[VERSION_KEY] && parseInt(localStorage[VERSION_KEY]) || 1;
+Object.defineProperty(gazel, 'version', {
+  
+  get: function() {
+    return version;
+  },
+
+  set: function(v) {
+    version = v;
+    localStorage[VERSION_KEY] = v;
+  }
+
+});
 
 gazel.compatible = exists(window.indexedDB)
   && exists(window.IDBTransaction);
@@ -426,7 +440,7 @@ var db;
 var loadingDb = false;
 
 function openDatabase(onsuccess, onerror, onupgrade) {
-  if(db && db.version == gazel.version) {
+  if(db && db.version == gazel.version && db.name === gazel.dbName) {
     onsuccess(db);
     return;
   }
@@ -484,13 +498,30 @@ function openDatabase(onsuccess, onerror, onupgrade) {
     onsuccess(db);
   };
 
-  req.onerror = onerror;
+  req.onerror = function(err) {
+    if(err && err.target.errorCode === 12) {
+      gazel.version++;
+      openDatabase(onsuccess, onerror, onupgrade);
+
+      return;
+    }
+
+    onerror(err);
+  };
+  req.onblocked = onerror;
 }
 
 function ensureObjectStore(osName, callback, errback) {
-  gazel.version++;
+  openDatabase(function(db) {
+    if(!db.objectStoreNames.contains(osName)) {
+      db.close();
+      gazel.version++;
 
-  openDatabase(function() {
+      ensureObjectStore(osName, callback, errback);
+
+      return;
+    }
+
     callback();
   }, errback, function(db) {
     if(!db.objectStoreNames.contains(osName)) {

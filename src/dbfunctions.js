@@ -2,7 +2,7 @@ var db;
 var loadingDb = false;
 
 function openDatabase(onsuccess, onerror, onupgrade) {
-  if(db && db.version == gazel.version) {
+  if(db && db.version == gazel.version && db.name === gazel.dbName) {
     onsuccess(db);
     return;
   }
@@ -60,13 +60,30 @@ function openDatabase(onsuccess, onerror, onupgrade) {
     onsuccess(db);
   };
 
-  req.onerror = onerror;
+  req.onerror = function(err) {
+    if(err && err.target.errorCode === 12) {
+      gazel.version++;
+      openDatabase(onsuccess, onerror, onupgrade);
+
+      return;
+    }
+
+    onerror(err);
+  };
+  req.onblocked = onerror;
 }
 
 function ensureObjectStore(osName, callback, errback) {
-  gazel.version++;
+  openDatabase(function(db) {
+    if(!db.objectStoreNames.contains(osName)) {
+      db.close();
+      gazel.version++;
 
-  openDatabase(function() {
+      ensureObjectStore(osName, callback, errback);
+
+      return;
+    }
+
     callback();
   }, errback, function(db) {
     if(!db.objectStoreNames.contains(osName)) {

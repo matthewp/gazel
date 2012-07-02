@@ -10,7 +10,7 @@ Trans.prototype.add = function() {
   this.set(uuid, undefined);
 
   return uuid;
-}
+};
 
 Trans.prototype.abortAll = function() {
   var self = this,
