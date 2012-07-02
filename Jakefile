@@ -1,7 +1,8 @@
-var fs = require('fs');
+var fs = require('fs'),
+    spawn = require('child_process').spawn;
 
-var outFile = 'gazel.js',
-    minFile = 'gazel.min.js';
+var outFile = 'build/gazel.js',
+    minFile = 'build/gazel.min.js';
 
 var files = [
   "src/setup.js",
@@ -22,7 +23,7 @@ var files = [
 ];
 
 desc('Default, combine all files')
-file({'gazel.js': files}, function() {
+task('gazel', [], function() {
 
   var data = "/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */\n\n";
   data += "(function() {\n"
@@ -32,4 +33,25 @@ file({'gazel.js': files}, function() {
   data += "\n}).call(this);";
 
   fs.writeFileSync(outFile, data);
+});
+
+task('min', [], function() {
+
+  var ugjs = spawn('uglifyjs.cmd', [ '-nc', '-o',
+    minFile, outFile]);
+
+  var log = function(d) {
+    console.log('' + d);
+  };
+
+  ugjs.stdout.on('data', log);
+  ugjs.stderr.on('data', log);
+  ugjs.on('exit', complete);
+
+}, { async: true });
+
+desc('Default task');
+task('default', function() {
+  jake.Task['gazel'].invoke();
+  jake.Task['min'].invoke();
 });

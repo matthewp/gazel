@@ -487,4 +487,5 @@ function ensureObjectStore(osName, callback) {
       db.createObjectStore(osName);
     }
   });
-}}).call(this);
+}
+}).call(this);
