@@ -15,7 +15,7 @@ properties {
     "src/set.js",
     "src/incr.js",
     "src/decr.js",
-    "src/del.js"
+    "src/del.js",
     "src/print.js",
     "src/gazel.js",
 		"src/dbfunctions.js"
