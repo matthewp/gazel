@@ -4,6 +4,10 @@ var fs = require('fs'),
 var outFile = 'build/gazel.js',
     minFile = 'build/gazel.min.js';
 
+var UGLIFYJS = require('os').platform().indexOf('win') !== -1
+  ? 'uglifyjs.cmd'
+  : 'uglifyjs';
+
 var files = [
   "src/setup.js",
   "src/uuid.js",
@@ -37,7 +41,7 @@ task('gazel', [], function() {
 
 task('min', [], function() {
 
-  var ugjs = spawn('uglifyjs.cmd', [ '-nc', '-o',
+  var ugjs = spawn(UGLIFYJS, [ '-nc', '-o',
     minFile, outFile]);
 
   var log = function(d) {
