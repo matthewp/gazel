@@ -152,16 +152,6 @@ Client.prototype = {
   register: function(type, action, callback) {
     var uuid, self = this;
 
-    if(this.needsOsVerification) {
-      ensureObjectStore(this.osName, function() {
-        self.needsOsVerification = false;
-
-        self.register(type, action, callback);
-      }, this.handleError.bind(this));
-
-      return;
-    }
-
     if(this.inMulti) {
       uuid = this.transMap.get(type);
       if(!uuid) {
@@ -267,38 +257,19 @@ Client.prototype.get = function(key, callback) {
   var self = this;
 
   this.register('read', function(uuid, cb) {
-    openDatabase(function(db) {
-
-      var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_ONLY);
-
-      var req = tx.objectStore(self.osName).get(key);
-      req.onerror = self.handleError.bind(self);
-      req.onsuccess = function (e) {
-        cb.call(self, e.target.result);
-      };
-
-    }, self.handleError.bind(self));
-
+    getKey(gazel.osName, self.trans, uuid, key, 
+      cb, self.handleError.bind(self), self);
   }, callback);
 
   return this;
 };
 Client.prototype.set = function(key, value, callback) {
   var self = this;
+  var osName = gazel.osName;
 
   this.register('write', function(uuid, cb) {
-    openDatabase(function(db) {
-
-      var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_WRITE);
-      
-      var req = tx.objectStore(self.osName).put(value, key);
-      req.onerror = self.handleError.bind(self);
-      req.onsuccess = function (e) {
-        var res = e.target.result === key ? 'OK' : 'ERR';
-        cb.call(self, res);
-      };
-
-    }, self.handleError.bind(self));
+    setValue(gazel.osName, self.trans, uuid, 
+      key, value, cb, self.handleError.bind(self), self);
   }, callback);
 
   return this;
@@ -307,39 +278,26 @@ Client.prototype.incrby = function(key, increment, callback) {
   var self = this;
 
   this.register('write', function(uuid, cb) {
-    openDatabase(function(db) {
+    var errback = self.handleError.bind(self),
+        osName = gazel.osName,
+        trans = self.trans;
 
-      var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_WRITE);
-      var os = tx.objectStore(self.osName);
-      (function curl(val) {
-        if(!exists(val)) {
-          var req = os.get(key);
-          req.onerror = self.handleError.bind(self);
-          req.onsuccess = function(e) {
-            curl(typeof e.target.result === 'undefined'
-              ? 0 : e.target.result);
-          };
+    getKey(osName, trans, uuid, key, function(val) {
+      val = val || 0;
 
-          return;
-        }
+      if(!isInt(val)) {
+        self.handleError('ERROR: Cannot increment a non-integer value.');
 
-        if(!isInt(val)) {
-          self.handleError('ERROR: Cannot increment a non-integer value.');
+        return;
+      }
 
-          return;
-        }
-     
-        var value = val + increment;
-        var req = os.put(value, key);
-        req.onerror = self.handleError.bind(self);
-        req.onsuccess = function (e) {
-          var res = e.target.result === key ? value : "ERR";
-          cb.call(self, res);
-        };
+      var newValue = val + increment;
+      setValue(osName, trans, uuid, key, newValue, function(res) {
+        cb.call(self, res === 'OK' ? newValue : 'ERR');
+      }, errback, self);
 
-      })();
+    }, errback, self, IDBTransaction.READ_WRITE);
 
-    }, self.handleError.bind(self));
   }, callback);
 
   return this;
@@ -365,30 +323,11 @@ Client.prototype.del = function() {
   else
     args.splice(args.length - 1);
   
-  var keys = args,
-      deleted = keys.length;
+  var keys = args;
 
   this.register('write', function(uuid, cb) {
-    openDatabase(function(db) {
-     
-      var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_WRITE),
-          os = tx.objectStore(self.osName),
-          left = keys.length;
-
-      while(keys.length > 0) {
-        (function() {
-          var key = keys.shift();
-          var req = os.delete(key);
-          req.onerror = self.handleError.bind(self);
-          req.onsuccess = function(e) {
-            left--;
-            
-            if(left === 0)
-              cb.call(self, deleted);
-          };
-        })();
-     }
-    });
+    deleteKey(gazel.osName, self.trans, uuid, 
+      keys, cb, self.handleError.bind(self), self);
   }, callback);
 
   return this;
@@ -405,34 +344,14 @@ gazel.print = function() {
 };
 gazel.dbName = "gazeldb";
 gazel.osName = "gazelos";
-
-var VERSION_KEY = "_gazel.version",
-    version = localStorage[VERSION_KEY] && parseInt(localStorage[VERSION_KEY]) || 1;
-Object.defineProperty(gazel, 'version', {
-  
-  get: function() {
-    return version;
-  },
-
-  set: function(v) {
-    version = v;
-    localStorage[VERSION_KEY] = v;
-  }
-
-});
+gazel.setsOsName = "gazelos.sets";
+gazel.version = 2;
 
 gazel.compatible = exists(window.indexedDB)
   && exists(window.IDBTransaction);
 
-gazel.createClient = function(osName) {
-  var client = new Client;
-
-  client.osName = osName || gazel.osName;
-  if(osName) {
-    client.needsOsVerification = true;
-  }
-
-  return client;
+gazel.createClient = function() {
+  return new Client;
 };
 
 this.gazel = gazel;
@@ -455,12 +374,15 @@ function openDatabase(onsuccess, onerror, onupgrade) {
   loadingDb = true;
 
   var req = window.indexedDB.open(gazel.dbName, gazel.version);
-  
-  req.onupgradeneeded = function (e) {
+
+  req.onupgradeneeded = function(e) {
     var uDb = e.target.result;
 
-    if(!uDb.objectStoreNames.contains(gazel.osName))
-      uDb.createObjectStore(gazel.osName);
+    [gazel.osName, gazel.setsOsName].forEach(function(key) {
+      if(!uDb.objectStoreNames.contains(key)) {
+        uDb.createObjectStore(key);
+      }
+    });
 
     if(onupgrade)
       onupgrade(uDb);
@@ -530,4 +452,55 @@ function ensureObjectStore(osName, callback, errback) {
   });
 }
 
+function getKey(osName, trans, uuid, key, callback, errback, context, perm) {
+  openDatabase(function(db) {
+
+    var tx = trans.pull(db, osName, uuid, perm || IDBTransaction.READ_ONLY);
+
+    var req = tx.objectStore(osName).get(key);
+    req.onerror = errback;
+    req.onsuccess = function(e) {
+      callback.call(context, e.target.result);
+    };
+
+  }, errback);
+}
+
+function setValue(osName, trans, uuid, key, value, callback, errback, context) {
+  openDatabase(function(db) {
+
+    var tx = trans.pull(db, osName, uuid, IDBTransaction.READ_WRITE);
+
+    var req = tx.objectStore(osName).put(value, key);
+    req.onerror = errback;
+    req.onsuccess = function(e) {
+      var res = e.target.result === key ? 'OK' : 'ERR';
+      callback.call(context, res);
+    };
+
+  }, errback);
+}
+
+function deleteKey(osName, trans, uuid, keys, callback, errback, context) {
+  openDatabase(function(db) {
+     
+    var tx = trans.pull(db, osName, uuid, IDBTransaction.READ_WRITE),
+        os = tx.objectStore(osName),
+        deleted = keys.length;
+
+    while(keys.length > 0) {
+      (function() {
+        var key = keys.shift();
+        var req = os.delete(key);
+        req.onerror = errback;
+        req.onsuccess = function(e) {
+          if(keys.length === 0){
+            callback.call(context, deleted);
+          }
+        };
+      })();
+    }
+
+  });
+}
 }).call(this);

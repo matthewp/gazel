@@ -2,18 +2,8 @@ Client.prototype.get = function(key, callback) {
   var self = this;
 
   this.register('read', function(uuid, cb) {
-    openDatabase(function(db) {
-
-      var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_ONLY);
-
-      var req = tx.objectStore(self.osName).get(key);
-      req.onerror = self.handleError.bind(self);
-      req.onsuccess = function (e) {
-        cb.call(self, e.target.result);
-      };
-
-    }, self.handleError.bind(self));
-
+    getKey(gazel.osName, self.trans, uuid, key, 
+      cb, self.handleError.bind(self), self);
   }, callback);
 
   return this;

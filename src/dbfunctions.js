@@ -17,12 +17,15 @@ function openDatabase(onsuccess, onerror, onupgrade) {
   loadingDb = true;
 
   var req = window.indexedDB.open(gazel.dbName, gazel.version);
-  
-  req.onupgradeneeded = function (e) {
+
+  req.onupgradeneeded = function(e) {
     var uDb = e.target.result;
 
-    if(!uDb.objectStoreNames.contains(gazel.osName))
-      uDb.createObjectStore(gazel.osName);
+    [gazel.osName, gazel.setsOsName].forEach(function(key) {
+      if(!uDb.objectStoreNames.contains(key)) {
+        uDb.createObjectStore(key);
+      }
+    });
 
     if(onupgrade)
       onupgrade(uDb);
@@ -89,5 +92,57 @@ function ensureObjectStore(osName, callback, errback) {
     if(!db.objectStoreNames.contains(osName)) {
       db.createObjectStore(osName);
     }
+  });
+}
+
+function getKey(osName, trans, uuid, key, callback, errback, context, perm) {
+  openDatabase(function(db) {
+
+    var tx = trans.pull(db, osName, uuid, perm || IDBTransaction.READ_ONLY);
+
+    var req = tx.objectStore(osName).get(key);
+    req.onerror = errback;
+    req.onsuccess = function(e) {
+      callback.call(context, e.target.result);
+    };
+
+  }, errback);
+}
+
+function setValue(osName, trans, uuid, key, value, callback, errback, context) {
+  openDatabase(function(db) {
+
+    var tx = trans.pull(db, osName, uuid, IDBTransaction.READ_WRITE);
+
+    var req = tx.objectStore(osName).put(value, key);
+    req.onerror = errback;
+    req.onsuccess = function(e) {
+      var res = e.target.result === key ? 'OK' : 'ERR';
+      callback.call(context, res);
+    };
+
+  }, errback);
+}
+
+function deleteKey(osName, trans, uuid, keys, callback, errback, context) {
+  openDatabase(function(db) {
+     
+    var tx = trans.pull(db, osName, uuid, IDBTransaction.READ_WRITE),
+        os = tx.objectStore(osName),
+        deleted = keys.length;
+
+    while(keys.length > 0) {
+      (function() {
+        var key = keys.shift();
+        var req = os.delete(key);
+        req.onerror = errback;
+        req.onsuccess = function(e) {
+          if(keys.length === 0){
+            callback.call(context, deleted);
+          }
+        };
+      })();
+    }
+
   });
 }

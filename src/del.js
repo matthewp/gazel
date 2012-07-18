@@ -8,30 +8,11 @@ Client.prototype.del = function() {
   else
     args.splice(args.length - 1);
   
-  var keys = args,
-      deleted = keys.length;
+  var keys = args;
 
   this.register('write', function(uuid, cb) {
-    openDatabase(function(db) {
-     
-      var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_WRITE),
-          os = tx.objectStore(self.osName),
-          left = keys.length;
-
-      while(keys.length > 0) {
-        (function() {
-          var key = keys.shift();
-          var req = os.delete(key);
-          req.onerror = self.handleError.bind(self);
-          req.onsuccess = function(e) {
-            left--;
-            
-            if(left === 0)
-              cb.call(self, deleted);
-          };
-        })();
-     }
-    });
+    deleteKey(gazel.osName, self.trans, uuid, 
+      keys, cb, self.handleError.bind(self), self);
   }, callback);
 
   return this;

@@ -13,16 +13,6 @@ Client.prototype = {
   register: function(type, action, callback) {
     var uuid, self = this;
 
-    if(this.needsOsVerification) {
-      ensureObjectStore(this.osName, function() {
-        self.needsOsVerification = false;
-
-        self.register(type, action, callback);
-      }, this.handleError.bind(this));
-
-      return;
-    }
-
     if(this.inMulti) {
       uuid = this.transMap.get(type);
       if(!uuid) {
