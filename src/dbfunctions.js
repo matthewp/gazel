@@ -129,6 +129,7 @@ function deleteKey(osName, trans, uuid, keys, callback, errback, context) {
      
     var tx = trans.pull(db, osName, uuid, IDBTransaction.READ_WRITE),
         os = tx.objectStore(osName),
+        remaining = keys.length,
         deleted = keys.length;
 
     while(keys.length > 0) {
@@ -137,7 +138,9 @@ function deleteKey(osName, trans, uuid, keys, callback, errback, context) {
         var req = os.delete(key);
         req.onerror = errback;
         req.onsuccess = function(e) {
-          if(keys.length === 0){
+          remaining--;
+
+          if(remaining === 0){
             callback.call(context, deleted);
           }
         };

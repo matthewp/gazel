@@ -10,7 +10,7 @@ Client.prototype.incrby = function(key, increment, callback) {
       val = val || 0;
 
       if(!isInt(val)) {
-        self.handleError('ERROR: Cannot increment a non-integer value.');
+        errback('ERROR: Cannot increment a non-integer value.');
 
         return;
       }
