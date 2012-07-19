@@ -5,18 +5,18 @@ describe('Multi', function() {
   before(function(done) {
     var client = gazel.createClient();
 
-    client.multi()
-      .set('Fee', 1)
-      .set('Fi', 2)
-      .set('Fo', 3)
-      .set('Fum', 4)
-      .incrby('Fee', 10)
-      .del('Fi', 'Fo', 'Fum')
-      .get('Fee')
-      .exec(function(res) {
-        results = res;
-        done();
-      });
+    var chain = client.multi();
+    chain = chain.set('Fee', 1);
+    chain = chain.set('Fi', 2);
+    chain = chain.set('Fo', 3);
+    chain = chain.set('Fum', 4);
+    chain = chain.incrby('Fee', 10);
+    chain = chain.del('Fi', 'Fo', 'Fum');
+    chain = chain.get('Fee');
+    chain.exec(function(res) {
+      results = res;
+      done();
+    });
   });
 
   it('should be a result for each operation.', function(done) {
