@@ -1,6 +1,6 @@
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
 
-(function() {
+(function(undefined) {
 var gazel = gazel || {};
 
 var exists = function (obj) {
@@ -379,6 +379,20 @@ Client.prototype.scard = function(key, callback) {
   this.smembers(key, function(members) {
     callback(members.length || 0);
   });
+
+  return this;
+};
+
+Client.prototype.sismember = function(key, value, callback) {
+  var self = this;
+
+  this.register('read', function(uuid, cb) {
+    var osKey = key + ':' + value;
+
+    getKey(gazel.setsOsName, self.trans, uuid, osKey, function(res) {
+      cb(res !== undefined);
+    }, self.handleError.bind(self), self);
+  }, callback);
 
   return this;
 };gazel.print = function() {

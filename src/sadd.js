@@ -47,3 +47,17 @@ Client.prototype.scard = function(key, callback) {
 
   return this;
 };
+
+Client.prototype.sismember = function(key, value, callback) {
+  var self = this;
+
+  this.register('read', function(uuid, cb) {
+    var osKey = key + ':' + value;
+
+    getKey(gazel.setsOsName, self.trans, uuid, osKey, function(res) {
+      cb(res !== undefined);
+    }, self.handleError.bind(self), self);
+  }, callback);
+
+  return this;
+};
