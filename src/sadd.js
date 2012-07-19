@@ -47,5 +47,3 @@ Client.prototype.scard = function(key, callback) {
 
   return this;
 };
-
-Client

@@ -23,6 +23,8 @@ window.IDBTransaction = window.IDBTransaction
 window.IDBTransaction.READ_ONLY = window.IDBTransaction.READ_ONLY || 'readonly';
 window.IDBTransaction.READ_WRITE = window.IDBTransaction.READ_WRITE || 'readwrite';
 
+window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange;
+
 var slice = Array.prototype.slice,
     splice = Array.prototype.splice;
 // Blantantly stolen from: https://gist.github.com/1308368
@@ -265,7 +267,6 @@ Client.prototype.get = function(key, callback) {
 };
 Client.prototype.set = function(key, value, callback) {
   var self = this;
-  var osName = gazel.osName;
 
   this.register('write', function(uuid, cb) {
     setValue(gazel.osName, self.trans, uuid, 
@@ -332,7 +333,55 @@ Client.prototype.del = function() {
 
   return this;
 };
-gazel.print = function() {
+Client.prototype.sadd = function(key, value, callback) {
+  var self = this;
+
+  this.register('write', function(uuid, cb) {
+
+    var osKey = key + ':' + value;
+    var obj = {
+      key: key,
+      value: value
+    };
+
+    setValue(gazel.setsOsName, self.trans, uuid,
+      osKey, obj, cb, self.handleError.bind(self), self);
+
+  }, callback);
+
+  return this;
+};
+
+Client.prototype.smembers = function(key, callback) {
+  var self = this;
+
+  this.register('read', function(uuid, cb) {
+    
+    var members = [];
+    transverseKeys(gazel.setsOsName, self.trans, uuid, 'key', key, function(res) {
+      
+      if(res) {
+        members.push(res.value);
+        return true;
+      } else {
+        cb.call(self, members);
+        return false;
+      }
+
+    }, self.handleError.bind(self), self);
+
+  }, callback);
+
+  return this;
+};
+
+Client.prototype.scard = function(key, callback) {
+  this.smembers(key, function(members) {
+    callback(members.length || 0);
+  });
+
+  return this;
+};gazel.print = function() {
   var args = slice.call(arguments);
   if(args.length === 0)
     return;
@@ -378,11 +427,14 @@ function openDatabase(onsuccess, onerror, onupgrade) {
   req.onupgradeneeded = function(e) {
     var uDb = e.target.result;
 
-    [gazel.osName, gazel.setsOsName].forEach(function(key) {
-      if(!uDb.objectStoreNames.contains(key)) {
-        uDb.createObjectStore(key);
-      }
-    });
+    if(!uDb.objectStoreNames.contains(gazel.osName)) {
+      uDb.createObjectStore(gazel.osName);
+    }
+
+    if(!uDb.objectStoreNames.contains(gazel.setsOsName)) {
+      var setsOs = uDb.createObjectStore(gazel.setsOsName);
+      setsOs.createIndex("key", "key", { unique: false });
+    }
 
     if(onupgrade)
       onupgrade(uDb);
@@ -500,6 +552,25 @@ function deleteKey(osName, trans, uuid, keys, callback, errback, context) {
         };
       })();
     }
+
+  });
+}
+
+function transverseKeys(osName, trans, uuid, indexName, value, callback, errback, context, perm) {
+  openDatabase(function(db) {
+    
+    var tx = trans.pull(db, osName, uuid, perm || IDBTransaction.READ_ONLY),
+        idx = tx.objectStore(osName).index(indexName),
+        keyRange = window.IDBKeyRange.only(value);
+
+    idx.openCursor(keyRange).onsuccess = function(e) {
+      var cursor = e.target.result;
+      if(cursor && callback.call(context, cursor.value)) {
+        cursor.continue();
+      } else {
+        callback.call(context);
+      }
+    };
 
   });
 }

@@ -21,11 +21,14 @@ function openDatabase(onsuccess, onerror, onupgrade) {
   req.onupgradeneeded = function(e) {
     var uDb = e.target.result;
 
-    [gazel.osName, gazel.setsOsName].forEach(function(key) {
-      if(!uDb.objectStoreNames.contains(key)) {
-        uDb.createObjectStore(key);
-      }
-    });
+    if(!uDb.objectStoreNames.contains(gazel.osName)) {
+      uDb.createObjectStore(gazel.osName);
+    }
+
+    if(!uDb.objectStoreNames.contains(gazel.setsOsName)) {
+      var setsOs = uDb.createObjectStore(gazel.setsOsName);
+      setsOs.createIndex("key", "key", { unique: false });
+    }
 
     if(onupgrade)
       onupgrade(uDb);
@@ -152,7 +155,7 @@ function transverseKeys(osName, trans, uuid, indexName, value, callback, errback
     
     var tx = trans.pull(db, osName, uuid, perm || IDBTransaction.READ_ONLY),
         idx = tx.objectStore(osName).index(indexName),
-        keyRange = IDBKeyRange.only(value);
+        keyRange = window.IDBKeyRange.only(value);
 
     idx.openCursor(keyRange).onsuccess = function(e) {
       var cursor = e.target.result;
