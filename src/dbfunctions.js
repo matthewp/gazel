@@ -159,8 +159,10 @@ function transverseKeys(osName, trans, uuid, indexName, value, callback, errback
 
     idx.openCursor(keyRange).onsuccess = function(e) {
       var cursor = e.target.result;
-      if(cursor && callback.call(context, cursor.value)) {
-        cursor.continue();
+      if(cursor) {
+        if(callback.call(context, cursor.value)) {
+          cursor.continue();
+        }
       } else {
         callback.call(context);
       }

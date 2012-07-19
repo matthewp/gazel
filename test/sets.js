@@ -5,6 +5,15 @@ describe('Sets', function() {
       SET_KEY = 'set:foo',
       ADDS_COUNT = 2;
 
+  /*
+  * Clean up by deleting any existing keys that might be in the data store.
+  */
+  before(function(done) {
+    client.sdel(SET_KEY, function() {
+      done();
+    });
+  });
+
   client.on('error', function(err) {
     throw err;
   });
@@ -25,7 +34,8 @@ describe('Sets', function() {
 
   it('Scard should retrieve a count of the members in a set.', function(done) {
     client.scard(SET_KEY, function(cnt) {
-      done(assert.equal(cnt, ADDS_COUNT, 'Count is not correct.'));
+      assert.equal(cnt, ADDS_COUNT, 'Count is not correct.');
+      done();
     });
   });
 

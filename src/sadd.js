@@ -1,9 +1,13 @@
+Client.prototype._sGetMemberKey = function(key, value) {
+  return key + ':' + value;
+};
+
 Client.prototype.sadd = function(key, value, callback) {
   var self = this;
 
   this.register('write', function(uuid, cb) {
 
-    var osKey = key + ':' + value;
+    var osKey = self._sGetMemberKey();
     var obj = {
       key: key,
       value: value
@@ -52,12 +56,33 @@ Client.prototype.sismember = function(key, value, callback) {
   var self = this;
 
   this.register('read', function(uuid, cb) {
-    var osKey = key + ':' + value;
+    var osKey = self._sGetMemberKey(key, value);
 
     getKey(gazel.setsOsName, self.trans, uuid, osKey, function(res) {
       cb(res !== undefined);
     }, self.handleError.bind(self), self);
   }, callback);
+
+  return this;
+};
+
+Client.prototype.sdel = function(key, callback) {
+  var self = this;
+
+  this.register('write', function(uuid, cb) {
+    self.smembers(key, function(members) {
+      var deleted = members.length;
+
+      var membersKeys = members.map(function(member) {
+        return self._sGetMemberKey(key, member);
+      });
+
+      deleteKey(gazel.setsOsName, self.trans, uuid, membersKeys, function() {
+        cb.call(self, deleted);
+      }, self.handleError.bind(self), self);
+    });
+  }, callback);
+
 
   return this;
 };
