@@ -3,13 +3,13 @@ describe('Sets', function() {
 
   var client = gazel.createClient(),
       SET_KEY = 'set:foo',
-      ADDS_COUNT = 2;
+      ADDS_COUNT = 1;
 
   /*
   * Clean up by deleting any existing keys that might be in the data store.
   */
   before(function(done) {
-    client.sdel(SET_KEY, function() {
+    client.del(SET_KEY, function() {
       done();
     });
   });

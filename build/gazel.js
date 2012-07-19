@@ -333,23 +333,26 @@ Client.prototype.del = function() {
 
   return this;
 };
-Client.prototype._sGetMemberKey = function(key, value) {
-  return key + ':' + value;
-};
-
-Client.prototype.sadd = function(key, value, callback) {
+Client.prototype.sadd = function(key, member, callback) {
   var self = this;
 
   this.register('write', function(uuid, cb) {
+    var errback = self.handleError.bind(self);
 
-    var osKey = self._sGetMemberKey();
-    var obj = {
-      key: key,
-      value: value
-    };
+    getKey(gazel.osName, self.trans, uuid, key,
+      function(members) {
+        if(members && (member in members)) { // member already in set.
+          cb.call(self, 'OK');
 
-    setValue(gazel.setsOsName, self.trans, uuid,
-      osKey, obj, cb, self.handleError.bind(self), self);
+          return;
+        } else if(!members) {
+          members = [];
+        }
+
+        members.push(':' + member.toString());
+        setValue(gazel.osName, self.trans, uuid,
+          key, members, cb, errback, self);
+      }, errback, self, IDBTransaction.READ_WRITE);
 
   }, callback);
 
@@ -360,18 +363,12 @@ Client.prototype.smembers = function(key, callback) {
   var self = this;
 
   this.register('read', function(uuid, cb) {
-    
-    var members = [];
-    transverseKeys(gazel.setsOsName, self.trans, uuid, 'key', key, function(res) {
-      
-      if(res) {
-        members.push(res.value);
-        return true;
-      } else {
-        cb.call(self, members);
-        return false;
-      }
+    getKey(gazel.osName, self.trans, uuid, key, function(values) {
+      var members = values.map(function(value) {
+        return value.split(':').splice(1).toString();
+      });
 
+      cb.call(self, members);
     }, self.handleError.bind(self), self);
 
   }, callback);
@@ -387,37 +384,29 @@ Client.prototype.scard = function(key, callback) {
   return this;
 };
 
-Client.prototype.sismember = function(key, value, callback) {
+Client.prototype.sismember = function(key, member, callback) {
   var self = this;
 
+  if(typeof member !== 'string') {
+    member = member.toString();
+  }
+
   this.register('read', function(uuid, cb) {
+    self.smembers(key, function(members) {
+      var isMember = members.some(function(value) {
+        return member === value;
+      });
+
+      cb.call(self, isMember);
+    });
+
+
     var osKey = self._sGetMemberKey(key, value);
 
     getKey(gazel.setsOsName, self.trans, uuid, osKey, function(res) {
       cb(res !== undefined);
     }, self.handleError.bind(self), self);
   }, callback);
-
-  return this;
-};
-
-Client.prototype.sdel = function(key, callback) {
-  var self = this;
-
-  this.register('write', function(uuid, cb) {
-    self.smembers(key, function(members) {
-      var deleted = members.length;
-
-      var membersKeys = members.map(function(member) {
-        return self._sGetMemberKey(key, member);
-      });
-
-      deleteKey(gazel.setsOsName, self.trans, uuid, membersKeys, function() {
-        cb.call(self, deleted);
-      }, self.handleError.bind(self), self);
-    });
-  }, callback);
-
 
   return this;
 };gazel.print = function() {
