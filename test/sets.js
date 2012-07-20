@@ -3,7 +3,7 @@ describe('Sets', function() {
 
   var client = gazel.createClient(),
       SET_KEY = 'set:foo',
-      ADDS_COUNT = 1;
+      ADDS_COUNT = 3;
 
   /*
   * Clean up by deleting any existing keys that might be in the data store.
@@ -29,6 +29,28 @@ describe('Sets', function() {
   it('Retrieving all members should return an array.', function(done) {
     client.smembers(SET_KEY, function(members) {
       done(assert.equal(Array.isArray(members), true, 'Members is not an array.'));
+    });
+  });
+
+  it('Should return only strings as the members.', function(done) {
+    client.sadd(SET_KEY, Date.now(), function() {
+      client.smembers(SET_KEY, function(members) {
+        var nonString = members.some(function(member) {
+          return typeof member !== 'string';
+        });
+
+        done(assert.equal(nonString, false, 'There is a non-string member.'));
+      });
+    });
+  });
+
+  it('Colons should be preserved when added.', function(done) {
+    var val = 'foo:' + Date.now().toString();
+
+    client.sadd(SET_KEY, val, function() {
+      client.sismember(SET_KEY, val, function(isMember) {
+        done(assert.equal(isMember, true, 'The value is not a member of the set.'));
+      });
     });
   });
 

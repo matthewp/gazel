@@ -365,7 +365,7 @@ Client.prototype.smembers = function(key, callback) {
   this.register('read', function(uuid, cb) {
     getKey(gazel.osName, self.trans, uuid, key, function(values) {
       var members = values.map(function(value) {
-        return value.split(':').splice(1).toString();
+        return value.split(':').splice(1).join(':');
       });
 
       cb.call(self, members);
@@ -399,13 +399,6 @@ Client.prototype.sismember = function(key, member, callback) {
 
       cb.call(self, isMember);
     });
-
-
-    var osKey = self._sGetMemberKey(key, value);
-
-    getKey(gazel.setsOsName, self.trans, uuid, osKey, function(res) {
-      cb(res !== undefined);
-    }, self.handleError.bind(self), self);
   }, callback);
 
   return this;
