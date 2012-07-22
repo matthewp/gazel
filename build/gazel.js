@@ -362,7 +362,9 @@ Client.prototype.sadd = function(key, member, callback) {
   }, callback);
 
   if(!inMulti) {
-    this.exec();
+    this.exec(function(results) {
+      callback.call(self, results[0]);
+    });
   }
 
   return this;
