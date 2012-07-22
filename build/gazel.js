@@ -221,7 +221,7 @@ Client.prototype = {
 
       this.transMap = new Dict();
 
-      (callback || function(){})(returned);
+      callback(returned);
     };
 
     var item = this.chain.shift();
@@ -363,7 +363,7 @@ Client.prototype.sadd = function(key, member, callback) {
 
   if(!inMulti) {
     this.exec(function(results) {
-      callback.call(self, results[0]);
+      callback.call(self, results[0][0]);
     });
   }
 

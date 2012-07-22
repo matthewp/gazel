@@ -80,7 +80,7 @@ Client.prototype = {
 
       this.transMap = new Dict();
 
-      (callback || function(){})(returned);
+      callback(returned);
     };
 
     var item = this.chain.shift();

@@ -28,7 +28,7 @@ Client.prototype.sadd = function(key, member, callback) {
 
   if(!inMulti) {
     this.exec(function(results) {
-      callback.call(self, results[0]);
+      callback.call(self, results[0][0]);
     });
   }
 
