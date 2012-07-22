@@ -38,6 +38,11 @@ Client.prototype.smembers = function(key, callback) {
 
   this.register('read', function(uuid, cb) {
     getKey(gazel.osName, self.trans, uuid, key, function(values) {
+      if(!values) {
+        cb.call(self, undefined);
+        return;
+      }
+
       var members = values.map(function(value) {
         return value.split(':').splice(1).join(':');
       });
