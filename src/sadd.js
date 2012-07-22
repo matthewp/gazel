@@ -1,6 +1,11 @@
 Client.prototype.sadd = function(key, member, callback) {
   var self = this;
 
+  var inMulti = this.inMulti;
+  if(!inMulti) {
+    this.multi();
+  }
+
   this.register('write', function(uuid, cb) {
     var errback = self.handleError.bind(self);
 
@@ -20,6 +25,10 @@ Client.prototype.sadd = function(key, member, callback) {
       }, errback, self, IDBTransaction.READ_WRITE);
 
   }, callback);
+
+  if(!inMulti) {
+    this.exec();
+  }
 
   return this;
 };
