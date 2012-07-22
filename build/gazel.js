@@ -221,7 +221,7 @@ Client.prototype = {
 
       this.transMap = new Dict();
 
-      callback(returned);
+      (callback || function(){})(returned);
     };
 
     var item = this.chain.shift();
