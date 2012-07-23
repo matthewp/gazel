@@ -32,6 +32,14 @@ describe('Sets', function() {
     });
   });
 
+  it('Should return undefined for a set that doesn\'t exist.', function(done) {
+    var key = 'foo:' + Date.now().toString();
+
+    client.smembers(key, function(members) {
+      done(assert.ok(typeof members === 'undefined'));
+    });
+  });
+
   it('Should return only strings as the members.', function(done) {
     client.sadd(SET_KEY, Date.now(), function() {
       client.smembers(SET_KEY, function(members) {
