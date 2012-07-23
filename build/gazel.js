@@ -151,8 +151,12 @@ function Client() {
 }
 
 Client.prototype = {
-  register: function(type, action, callback) {
-    var uuid, self = this;
+  register: function(type, action, callback, lock) {
+    var uuid, self = this, inMulti = this.inMulti;
+
+    if(lock && !this.inMulti) {
+      this.multi();
+    }
 
     if(this.inMulti) {
       uuid = this.transMap.get(type);
@@ -166,10 +170,22 @@ Client.prototype = {
         action: action
       });
 
-      return;
+      if(inMulti) {
+        return;
+      }
     }
 
-    uuid = self.trans.add();
+    if(!uuid) {
+      uuid = self.trans.add();
+    }
+
+    if(lock) {
+      this.exec(function(results) {
+        (callback || function() { }).apply(null, results[0]);
+      });
+
+      return;
+    }
 
     action(uuid, function() {
       var args = slice.call(arguments);
@@ -336,11 +352,6 @@ Client.prototype.del = function() {
 Client.prototype.sadd = function(key, member, callback) {
   var self = this;
 
-  var inMulti = this.inMulti;
-  if(!inMulti) {
-    this.multi();
-  }
-
   this.register('write', function(uuid, cb) {
     var errback = self.handleError.bind(self);
 
@@ -359,13 +370,7 @@ Client.prototype.sadd = function(key, member, callback) {
           key, members, cb, errback, self);
       }, errback, self, IDBTransaction.READ_WRITE);
 
-  }, callback);
-
-  if(!inMulti) {
-    this.exec(function(results) {
-      callback.call(self, results[0][0]);
-    });
-  }
+  }, callback, true);
 
   return this;
 };

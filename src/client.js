@@ -10,8 +10,12 @@ function Client() {
 }
 
 Client.prototype = {
-  register: function(type, action, callback) {
-    var uuid, self = this;
+  register: function(type, action, callback, lock) {
+    var uuid, self = this, inMulti = this.inMulti;
+
+    if(lock && !this.inMulti) {
+      this.multi();
+    }
 
     if(this.inMulti) {
       uuid = this.transMap.get(type);
@@ -25,10 +29,22 @@ Client.prototype = {
         action: action
       });
 
-      return;
+      if(inMulti) {
+        return;
+      }
     }
 
-    uuid = self.trans.add();
+    if(!uuid) {
+      uuid = self.trans.add();
+    }
+
+    if(lock) {
+      this.exec(function(results) {
+        (callback || function() { }).apply(null, results[0]);
+      });
+
+      return;
+    }
 
     action(uuid, function() {
       var args = slice.call(arguments);
