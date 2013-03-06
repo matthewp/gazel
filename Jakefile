@@ -30,7 +30,7 @@ desc('Default, combine all files')
 task('gazel', [], function() {
 
   var data = "/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */\n\n";
-  data += "(function() {\n"
+  data += "(function(undefined) {\n"
   files.forEach(function(file) {
     data += fs.readFileSync(file);
   });

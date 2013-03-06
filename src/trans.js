@@ -2,7 +2,7 @@ function Trans() {
   Dict.call(this);
 }
 
-Trans.prototype = Dict.prototype;
+Trans.prototype = Object.create(Dict.prototype);
 Trans.prototype.constructor = Trans;
 
 Trans.prototype.add = function() {

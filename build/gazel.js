@@ -1,6 +1,6 @@
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
 
-(function() {
+(function(undefined) {
 var gazel = gazel || {};
 
 var exists = function (obj) {
@@ -23,8 +23,7 @@ window.IDBTransaction = window.IDBTransaction
 window.IDBTransaction.READ_ONLY = window.IDBTransaction.READ_ONLY || 'readonly';
 window.IDBTransaction.READ_WRITE = window.IDBTransaction.READ_WRITE || 'readwrite';
 
-var slice = Array.prototype.slice,
-    splice = Array.prototype.splice;
+var slice = Array.prototype.slice;
 // Blantantly stolen from: https://gist.github.com/1308368
 // Credit to LevelOne and Jed, js gods that they are.
 
@@ -103,7 +102,7 @@ function Trans() {
   Dict.call(this);
 }
 
-Trans.prototype = Dict.prototype;
+Trans.prototype = Object.create(Dict.prototype);
 Trans.prototype.constructor = Trans;
 
 Trans.prototype.add = function() {
@@ -398,7 +397,7 @@ gazel.print = function() {
   if(args.length === 0)
     return;
 
-  (args[0] instanceof Array ? args[0] : [args[0]])
+  (Array.isArray(args[0]) ? args[0] : [args[0]])
     .forEach(function(item) {
       console.log(item);
     });

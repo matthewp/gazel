@@ -20,5 +20,4 @@ window.IDBTransaction = window.IDBTransaction
 window.IDBTransaction.READ_ONLY = window.IDBTransaction.READ_ONLY || 'readonly';
 window.IDBTransaction.READ_WRITE = window.IDBTransaction.READ_WRITE || 'readwrite';
 
-var slice = Array.prototype.slice,
-    splice = Array.prototype.splice;
+var slice = Array.prototype.slice;
