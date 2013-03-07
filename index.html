@@ -2,185 +2,151 @@
 <html lang="en">
 <head>
   <title>Gazel | key/value store for the browser</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-    }
-
-    body {
-      background: #FAF9F7;
-      color: #393738;
-      font-family: 'Verdana', sans-serif;
-      font-size: 17px;
-      font-style: normal;
-      font-weight: normal;
-      text-transform: normal;
-      letter-spacing: normal;
-    }
-
-    pre {
-      border: 1px dashed #393738;
-      padding: 2px;
-    }
-
-    header {
-      width: 100%;
-    }
-
-    header h1 {
-      font-weight: bold;
-      margin: auto;
-      text-align: center;
-      width: 100%;
-    }
-
-    header hr {
-      background: #DC441F;
-      color: #DC441F;
-      border: 0;
-      height: 5px;
-      width: 70%;
-    }
-
-    header p {
-      font-size: 11px;
-      text-align: center;
-      width: 100%;
-    }
-
-    article h2 {
-      font-size: 22px;
-      background: #E0E1D3;
-      padding-left: 1.5em;
-    }
-
-    article span, article pre {
-      margin: 15px;
-    }
-
-    article ul {
-      margin: 0 4em 0 2em;
-      list-style-type: square;
-    }
-
-    article ul li span {
-      color: #393738;
-      line-height: 1.4em;
-    }
-
-    section {
-      margin-bottom: 2em;
-    }
-
-    footer {
-      background: #DC441F;
-      border-radius: 8px 8px 0 0;
-      height: 15px;
-    }
-
-    .project article:first-child pre {
-      background-color: black;
-      border: none;
-      color: #00FF00;
-      padding: 10px;
-    }
-
-    #exec {
-      position: absolute;
-      right: 15px;
-      font-size: 20px;
-    }
- 
-    #fee {
-      font-weight: bolder;
-    }
-
-    .command {
-      margin: 20px;
-    }
-
-    .command ul, .command ul li, .command ul li span {
-      margin: 0;
-    }
-
-    .command .arg {
-      font-style: italic;
-    }
-  </style>
-  <script src="gazel.min.js"></script>
+  <link href="bootstrap.css" rel="stylesheet">
+  <link href="bootstrap-responsive.min.css" rel="stylesheet">
+  <link href="bootswatch.css" rel="stylesheet">
+  <link href="prettify.css" rel="stylesheet">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet">
+  <link href="gazel-theme.css" rel="stylesheet">
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script src="bootstrap.min.js"></script>
+  <script src="bootswatch.js"></script>
+  <script src="prettify.js"></script>
+  <script src="gazel.js"></script>
 </head>
-<body>
-  <a href="https://github.com/matthewp/gazel"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://a248.e.akamai.net/assets.github.com/img/7afbc8b248c68eb468279e8c17986ad46549fb71/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub"></a>
-  <header>
-    <h1>Gazel</h1>
-    <p>A high performance key/value store for the browser modeled after Redis.</p>
-    <hr/>
-  </header>
-  <section id="project" class="project">
-    <article>
-      <h2>Get it</h2>
-      <pre>curl https://raw.github.com/matthewp/gazel/master/build/gazel.min.js > gazel.min.js</pre>
-    </article>
-    <article>
-      <h2>Usage</h2>
-      <script id="scr_demo">
-        function demo() {
-          var client = gazel.createClient();
+<body id="top" class="preview gazel-brand" data-spy="scroll" data-target=".subnav" data-offset="80">
+  <div class="navbar navbar-fixed-top navbar-inverse">
+    <div class="navbar-inner">
+      <div class="container">
+        <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </a>
+        <a class="brand" href="../">Gazel</a>
+        <div class="nav-collapse collapse" id="main-menu">
+          <ul class="nav" id="main-menu-left">
+            <li><a href="http://gazeljs.org">News</a></li>
+            <li class="dropdown">
+              <a class="dropdown-toggle" data-toggle="dropdown" href="#">Commands <b class="caret"></b></a>
+              <ul class="dropdown-menu" id="swatch-menu">
+                <li><a href="#command-get">Get</a></li>
+                <li><a href="#command-set">Set</a></li>
+                <li><a href="#command-del">Del</a></li>
+                <li><a href="#command-incr">Incr</a></li>
+                <li><a href="#command-incrby">Incrby</a></li>
+                <li><a href="#command-decr">Decr</a></li>
+                <li><a href="#command-decrby">Decrby</a></li>
+                <li><a href="#command-multi">Multi</a></li>
+                <li><a href="#command-exec">Exec</a></li>
+                <li><a href="#command-discard">Discard</a></li>
+              </ul>
+            </li>
+            <li class="dropdown" id="preview-menu">
+              <a class="dropdown-toggle" data-toggle="dropdown" href="#">Download <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a target="_blank" href="gazel.js">gazel.js</a></li>
+                <li><a target="_blank" href="gazel.min.js">gazel.min.js</a></li>
+              </ul>
+            </li>
+          </ul>
+          <ul class="nav pull-right" id="main-menu-right">
+            <li>
+              <a rel="tooltip"
+                  target="_blank"
+                  href="https://github.com/matthewp/gazel"
+                  title="Gazel code">Fork on GitHub <i class="icon-share-alt"></i>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <header class="jumbotron subhead" id="overview">
+      <div class="row">
+        <div class="span12">
+          <h1>Gazel</h1>
+          <p class="lead">A high performance key/value store for the browser modeled after Redis.</p>
+        </div>
+      </div>
+      <div class="subnav">
+        <ul class="nav nav-pills">
+          <li><a href="#get-it">Latest</a></li>
+          <li><a href="#usage">Usage</a></li>
+          <li><a href="#commands">Commands</a></li>
+          <li><a href="#plans">Plans</a></li>
+        </ul>
+      </div>
+    </header>
+  </div>
 
-          client.on('error', function(err) {
-            alert('Oh noes!');
-          });
+  <div id="project" class="project container">
+    <section id="get-it">
+      <div class="page-header">
+        <h1>Get latest</h1>
+      </div>
+      <p>If you like living on the bleeding edge, grab the latest build from GitHub.</p>
+      <pre class="prettyprint">curl https://raw.github.com/matthewp/gazel/master/build/gazel.min.js > gazel.min.js</pre>
+    </section>
+    <section id="usage">
+      <div class="page-header">
+        <h1>Usage</h1>
+      </div>
+      <a id="exec" href="#" class="btn btn-primary pull-right">Execute</a>
+      <h3>Fee: <span id="fee">0</span></h3>
+      <pre id="demo" class="prettyprint linenums languague-js">
+var client = gazel.createClient();
 
-          client.set('Foo', 'bar', gazel.print);
+client.on('error', function(err) {
+  alert('Oh noes!');
+});
 
-          client.multi()
-            .set('Fee', 1)
-            .set('Fi', 2)
-            .set('Fo', 3)
-            .set('Fum', 4)
-            .incrby('Fee', 10)
-            .get('Fee')
-            .exec(function(results) {
-              var fee = results.pop()[0];
+client.set('Foo', 'bar', gazel.print);
 
-              document.getElementById('fee').textContent = fee;
-            });
-        }
-      </script>
-      <span>Fee: </span><span id="fee">0</span>
-      <button id="exec" onclick="javascript:demo()">Execute</button>
-      <pre id="demo"></pre>
+client.multi()
+  .set('Fee', 1)
+  .set('Fi', 2)
+  .set('Fo', 3)
+  .set('Fum', 4)
+  .incrby('Fee', 10)
+  .get('Fee')
+  .exec(function(results) {
+    var fee = results.pop()[0];
+
+    document.getElementById('fee').textContent = fee;
+  });</pre>
       <script>
         window.addEventListener('load', function loaded() {
           window.removeEventListener('load', loaded);
-         
-          var demo = document.getElementById('demo');
           
-          if(!gazel) {
-            demo.textContent = 'Unable to load Gazel!';
-          } else if(gazel.compatible) {
-            var js = document.getElementById('scr_demo').innerHTML;
-            demo.textContent = js;
-          } else {
-            demo.textContent = "Your browser isn't compatible :(";
-          }
+          var demo = document.getElementById('demo');
+          document.getElementById('exec').addEventListener('click', function(e) {
+            e.preventDefault();
+            var code = demo.textContent;
+            var fn = new Function('document', 'gazel', code);
+            fn.apply(null, [document, gazel]);
+          });
+          
+          prettyPrint();
         });
       </script>
-    </article>
-    <article>
-      <h2>Commands</h2>
-      <div class="command">
-        <h3>get</h3>
+    </section>
+    <section id="commands">
+      <div class="page-header">
+        <h1>Commands</h1>
+      </div>
+      <div id="command-get" class="command">
+        <h2>get</h2>
         <p>Get the value of a key.</p>
         <ul>
           <li><span class="arg">key</span>: String key.</li>
           <li><span class="arg">callback</span>: Function callback in case of success. Argument is the key's value.</li>
         </ul>
       </div>
-      <div class="command">
-        <h3>set</h3>
+      <div id="command-set" class="command">
+        <h2>set</h2>
         <p>Set the value of a key.</p>
         <ul>
           <li><span class="arg">key</span>: String key.</li>
@@ -188,24 +154,24 @@
           <li><span class="arg">callback</span>: Function callback in case of success. Includes one argument, which should always have the value of OK.</li>
         </ul>
       </div>
-      <div class="command">
-        <h3>del</h3>
+      <div id="command-del" class="command">
+        <h2>del</h2>
         <p>Delete a key, or series of keys.</p>
         <ul>
           <li><span class="arg">key(s)</span>: String key, or a series of arguments for multiple string keys.</li>
           <li><span class="arg">callback</span>: Function callback in case of success. Argument includes the number of keys deleted.</li>
         </ul>
       </div>
-      <div class="command">
-        <h3>incr</h3>
+      <div id="command-incr" class="command">
+        <h2>incr</h2>
         <p>Increment a key by 1. They key's value must be an integer. If the key does not exist, it will be created and assigned the value of 1.</p>
         <ul>
           <li><span class="arg">key</span>: String key</li>
           <li><span class="arg">callback</span>: Function callback in case of success.
         </ul>
       </div>
-      <div class="command">
-        <h3>incrby</h3>
+      <div id="command-incrby" class="command">
+        <h2>incrby</h2>
         <p>Increment a key by a given increment. They key's value must be an integer. If the key does not exist, it will be created and assigned the value of increment.</p>
         <ul>
           <li><span class="arg">key</span>: String key.</li>
@@ -213,16 +179,16 @@
           <li><span class="arg">callback</span>: Function callback in case of success.</li>
         </ul>
       </div>
-      <div class="command">
-        <h3>decr</h3>
+      <div id="command-decr" class="command">
+        <h2>decr</h2>
         <p>Decrement a key by a value of 1. The key's value must be an integer. If the key does not exist, it will be created with a value of -1.</p>
         <ul>
           <li><span class="arg">key</span>: String key.</li>
           <li><span class="arg">callback</span>: Function callback in case of success.</li>
         </ul>
       </div>
-      <div class="command">
-        <h3>decrby</h3>
+      <div id="command-decrby" class="command">
+        <h2>decrby</h2>
         <p>Decrement a key by a given decrement. The key's value must be an integer. If the key does not exist, it will be created with a value of decrement.</p>
         <ul>
           <li><span class="arg">key</span>: String key</li>
@@ -230,34 +196,49 @@
           <li><span class="arg">callback</span>: Function callback in case of success.</li>
         </ul>
       </div>
-      <div class="command">
-        <h3>multi</h3>
+      <div id="command-multi" class="command">
+        <h2>multi</h2>
         <p>Initiate the start of a chaining operation.</p>
       </div>
-      <div class="command">
-        <h3>exec</h3>
+      <div id="command-exec" class="command">
+        <h2>exec</h2>
         <p>Execute a chain of commands.</p>
         <ul>
           <li><span class="arg">callback</span>: Function callback in case of success. Called when chaining is complete, fed a results array, containing arrays of all of the results.</li>
         </ul>
       </div>
-      <div class="command">
-        <h3>discard</h3>
+      <div id="command-discard" class="command">
+        <h2>discard</h2>
         <p>Abort a transaction in process.</p>
         <ul>
           <li><span class="arg">callback</span>: Function callback, called after discarding the transactions in process.</li>
         </ul>
-    </article>
-    <article>
-      <h2>Plans</h2>
+    </section>
+    <section id="plans">
+      <div class="page-header">
+        <h1>Plans</h1>
+      </div>
       <ul>
         <li>Steal more Redis commands. !important</li>
         <li>Web SQL fallback.</li>
         <li>Wider test coverage.</li>
         <li>Allow for multiple databases.</li>
       </ul>
-    </article>
-  </section>
-  <footer />
+    </section>
+    <br><br><br><br>
+    <hr>
+    <footer id="footer">
+      <p class="pull-right">
+        <a href="#top">Back to top</a>
+      </p>
+      <div class="links">
+        <a href="http://www.matthewphillips.info">Home page</a>
+        <a href="http://twitter.com/matthewcp">Twitter</a>
+        <a href="https://plus.google.com/u/0/105036210521897694269">Google+</a>
+        <a href="https://github.com/matthewp">GitHub</a>
+      </div>
+      Made by <a href="http://www.matthewphillips.info">Matthew Phillips</a>. Contact him <a href="mailto:matthew@matthewphillips.info">matthew@matthewphillips.info</a>.
+    </footer>
+  </div>
 </body>
 </html>

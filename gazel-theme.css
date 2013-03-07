@@ -1,0 +1,25 @@
+.gazel-brand .navbar-inner,  
+.gazel-brand .nav li.dropdown.open>.dropdown-toggle, .navbar-inverse .nav li.dropdown.active>.dropdown-toggle, .navbar-inverse .nav li.dropdown.open.active>.dropdown-toggle {
+  background-color: #DC441F;
+}
+
+.gazel-brand .dropdown-menu > li > a:hover,
+.gazel-brand .dropdown-menu > li > a:focus,
+.gazel-brand .dropdown-submenu:hover > a,
+.gazel-brand .dropdown-submenu:focus > a {
+  background-color: #D0401D;
+  background-image: linear-gradient(to bottom, #DC441F, #D0401D);
+}
+
+.gazel-brand .btn-primary {
+  background-color: #D0401D;
+}
+
+.gazel-brand .brand {
+  font-weight: 600;
+}
+
+.gazel-brand .command ul,
+.gazel-brand #plans ul {
+  list-style-type: square;
+}
