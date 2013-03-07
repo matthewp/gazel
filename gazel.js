@@ -1,7 +1,6 @@
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
 
-(function() {
-'use strict';
+(function(undefined) {
 var gazel = gazel || {};
 
 var exists = function (obj) {
@@ -21,62 +20,10 @@ window.indexedDB = window.indexedDB
 window.IDBTransaction = window.IDBTransaction
   || window.webkitIDBTransaction;
 
-var slice = Array.prototype.slice,
-    splice = Array.prototype.splice;
-var Thing = Object.create(null);
-Thing.create = function(proto, props, init) {
-  if(typeof props === 'undefined'
-      && typeof init === 'undefined'
-      && !(proto instanceof Array))
-    return Object.create(proto);
-  else if(typeof props === 'boolean') {
-    init = props;
-    props = undefined;
-  }
+window.IDBTransaction.READ_ONLY = window.IDBTransaction.READ_ONLY || 'readonly';
+window.IDBTransaction.READ_WRITE = window.IDBTransaction.READ_WRITE || 'readwrite';
 
-  if(!(proto instanceof Array))
-    proto = [ proto ];
-
-  var desc = {};
-  for(var p in props) {
-    desc[p] = {
-      value: props[p],
-      writable: true,
-      enumerable: true,
-      configurable: true
-    };
-  }
-
-  var o, baseDesc = {}, base = proto.pop();
-  do {
-   var par = proto.pop();
-
-   if(par) {
-     var all = {};
-     for(var p in base) {
-      all[p] = base[p];
-
-      baseDesc[p] = Object.getOwnPropertyDescriptor(all, p);
-     }
-
-     base = Object.create(par, baseDesc);
-   }
-  } while(proto.length > 0);
-
-  o = Object.create(base, desc);
-
-  if(init) {
-    var args = Array.prototype.slice.call(arguments)
-                .slice(typeof props === 'undefined' ? 2 : 3);
-
-    o.init.apply(o, args);
-  }
- 
-  return o;
-};
-
-if(typeof exports !== 'undefined')
-  exports.create = Thing.create;
+var slice = Array.prototype.slice;
 // Blantantly stolen from: https://gist.github.com/1308368
 // Credit to LevelOne and Jed, js gods that they are.
 
@@ -101,13 +48,11 @@ function createUuid(
       );
   return b
  }
-var Dict = Thing.create(Object.prototype, {
-  
-  init: function() {
-    this.items = {};
+function Dict() {
+  this.items = {};
+}
 
-    return this;
-  },
+Dict.prototype = {
 
   prop: function(key) {
     return ':' + key;
@@ -151,57 +96,73 @@ var Dict = Thing.create(Object.prototype, {
       return key.substring(1);
     });
   }
-});
-var Trans = Thing.create(Dict, {
 
-  add: function() {
-    var uuid = createUuid();
-    this.set(uuid, undefined);
+};
+function Trans() {
+  Dict.call(this);
+}
 
-    return uuid;
-  },
+Trans.prototype = Object.create(Dict.prototype);
+Trans.prototype.constructor = Trans;
 
-  abortAll: function() {
-    var self = this,
-        keys = self.keys();
+Trans.prototype.add = function() {
+  var uuid = createUuid();
+  this.set(uuid, undefined);
 
-    keys.forEach(function(key) {
-      var tx = self.get(key);
-      if(tx)
-        tx.abort();
+  return uuid;
+};
 
-      self.del(key);
-    });
-  },
+Trans.prototype.abortAll = function() {
+  var self = this,
+      keys = self.keys();
 
-  pull: function(db, uuid, perm) {
-    var tx = this.get(uuid);
-    if(!tx) {
-      tx = db.transaction([gazel.osName], perm);
-      tx.onerror = onerror;
+  keys.forEach(function(key) {
+    var tx = self.get(key);
+    if(tx)
+      tx.abort();
 
-      this.set(uuid, tx);
-    }
+    self.del(key);
+  });
+};
 
-    return tx;
+Trans.prototype.pull = function(db, os, uuid, perm) {
+  var tx = this.get(uuid);
+  if(!tx) {
+    tx = db.transaction([os], perm);
+    tx.onerror = onerror;
+
+    this.set(uuid, tx);
   }
- 
-});
+
+  return tx;
+};
 function Client() {
   this.chain = [];
   this.inMulti = false;
   this.returned = [];
 
-  this.trans = Thing.create(Trans, true);
-  this.transMap = Thing.create(Dict, true);
+  this.trans = new Trans();
+  this.transMap = new Dict();
 
-  this.events = Thing.create(Dict, true);
+  this.events = new Dict();
 }
 
 Client.prototype = {
   register: function(type, action, callback) {
+    var uuid, self = this;
+
+    if(this.needsOsVerification) {
+      ensureObjectStore(this.osName, function() {
+        self.needsOsVerification = false;
+
+        self.register(type, action, callback);
+      }, this.handleError.bind(this));
+
+      return;
+    }
+
     if(this.inMulti) {
-      var uuid = this.transMap.get(type);
+      uuid = this.transMap.get(type);
       if(!uuid) {
         uuid = this.trans.add();
         this.transMap.set(type, uuid);
@@ -215,15 +176,14 @@ Client.prototype = {
       return;
     }
 
-    var self = this,
-        uuid = self.trans.add();
+    uuid = self.trans.add();
 
     action(uuid, function() {
       var args = slice.call(arguments);
 
       self.trans.del(uuid);
 
-      (callback || function(){}).apply(null, args);
+      (callback || function() { }).apply(null, args);
     });
   },
 
@@ -266,7 +226,7 @@ Client.prototype = {
         self.trans.del(uuid);
       });
 
-      this.transMap = Thing.create(Dict, true);
+      this.transMap = new Dict();
 
       callback(returned);
     };
@@ -295,12 +255,12 @@ Client.prototype.discard = function(callback) {
   }
 };
 Client.prototype.handleError = function() {
-  var args = Array.prototype.slice.call(arguments);
+  var args = slice.call(arguments);
 
-  var actions = this.events.get('error') || [];
-  actions.forEach(function(action) {
-    action.apply(null, args);
-  });
+  (this.events.get('error') || [])
+    .forEach(function(action) {
+      action.apply(null, args);
+    });
 };
 Client.prototype.get = function(key, callback) {
   var self = this;
@@ -308,9 +268,9 @@ Client.prototype.get = function(key, callback) {
   this.register('read', function(uuid, cb) {
     openDatabase(function(db) {
 
-      var tx = self.trans.pull(db, uuid, IDBTransaction.READ);
+      var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_ONLY);
 
-      var req = tx.objectStore(gazel.osName).get(key);
+      var req = tx.objectStore(self.osName).get(key);
       req.onerror = self.handleError.bind(self);
       req.onsuccess = function (e) {
         cb.call(self, e.target.result);
@@ -328,9 +288,9 @@ Client.prototype.set = function(key, value, callback) {
   this.register('write', function(uuid, cb) {
     openDatabase(function(db) {
 
-      var tx = self.trans.pull(db, uuid, IDBTransaction.READ_WRITE);
+      var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_WRITE);
       
-      var req = tx.objectStore(gazel.osName).put(value, key);
+      var req = tx.objectStore(self.osName).put(value, key);
       req.onerror = self.handleError.bind(self);
       req.onsuccess = function (e) {
         var res = e.target.result === key ? 'OK' : 'ERR';
@@ -348,8 +308,8 @@ Client.prototype.incrby = function(key, increment, callback) {
   this.register('write', function(uuid, cb) {
     openDatabase(function(db) {
 
-      var tx = self.trans.pull(db, uuid, IDBTransaction.READ_WRITE);
-      var os = tx.objectStore(gazel.osName);
+      var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_WRITE);
+      var os = tx.objectStore(self.osName);
       (function curl(val) {
         if(!exists(val)) {
           var req = os.get(key);
@@ -404,32 +364,27 @@ Client.prototype.del = function() {
   else
     args.splice(args.length - 1);
   
-  var keys = args;
+  var keys = args,
+      deleted = keys.length;
 
   this.register('write', function(uuid, cb) {
     openDatabase(function(db) {
      
-      var tx = self.trans.pull(db, uuid, IDBTransaction.READ_WRITE);
-      
-      var os = tx.objectStore(gazel.osName),
-          left = keys.length,
-          deleted = 0;
+      var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_WRITE),
+          os = tx.objectStore(self.osName),
+          left = keys.length;
 
       while(keys.length > 0) {
-
         (function() {
-
-        var key = keys.shift();
-        var req = os.delete(key);
-        req.onerror = self.handleError.bind(self);
-        req.onsuccess = function(e) {
-          left--;
-          
-          if(e.target.result) deleted++;
-          
-          if(left === 0)
-            cb.call(self, deleted);
-        };
+          var key = keys.shift();
+          var req = os.delete(key);
+          req.onerror = self.handleError.bind(self);
+          req.onsuccess = function(e) {
+            left--;
+            
+            if(left === 0)
+              cb.call(self, deleted);
+          };
         })();
      }
     });
@@ -438,32 +393,53 @@ Client.prototype.del = function() {
   return this;
 };
 gazel.print = function() {
-  var args = Array.prototype.slice.call(arguments);
+  var args = slice.call(arguments);
   if(args.length === 0)
     return;
 
-  var items = args[0] instanceof Array ? args[0] : [args[0]];
-  items.forEach(function(item) {
-    console.log(item);
-  });
+  (Array.isArray(args[0]) ? args[0] : [args[0]])
+    .forEach(function(item) {
+      console.log(item);
+    });
 };
-gazel.version = 1;
 gazel.dbName = "gazeldb";
 gazel.osName = "gazelos";
+
+var VERSION_KEY = "_gazel.version",
+    version = localStorage[VERSION_KEY] && parseInt(localStorage[VERSION_KEY]) || 1;
+Object.defineProperty(gazel, 'version', {
+  
+  get: function() {
+    return version;
+  },
+
+  set: function(v) {
+    version = v;
+    localStorage[VERSION_KEY] = v;
+  }
+
+});
 
 gazel.compatible = exists(window.indexedDB)
   && exists(window.IDBTransaction);
 
-gazel.createClient = function() {
-  return new Client;
+gazel.createClient = function(osName) {
+  var client = new Client;
+
+  client.osName = osName || gazel.osName;
+  if(osName) {
+    client.needsOsVerification = true;
+  }
+
+  return client;
 };
 
 this.gazel = gazel;
 var db;
 var loadingDb = false;
 
-function openDatabase(onsuccess, onerror) {
-  if(db) {
+function openDatabase(onsuccess, onerror, onupgrade) {
+  if(db && db.version == gazel.version && db.name === gazel.dbName) {
     onsuccess(db);
     return;
   }
@@ -484,6 +460,9 @@ function openDatabase(onsuccess, onerror) {
 
     if(!uDb.objectStoreNames.contains(gazel.osName))
       uDb.createObjectStore(gazel.osName);
+
+    if(onupgrade)
+      onupgrade(uDb);
   };
 
   var reqSuccess;
@@ -491,6 +470,9 @@ function openDatabase(onsuccess, onerror) {
     var sDb = e.target.result;
 
     if (sDb.setVersion && Number(sDb.version) !== gazel.version) {
+      if(db)
+        db.close();
+
       var dbReq = sDb.setVersion(String(gazel.version));
       dbReq.onsuccess = function (e2) {
         var e3 = {}; e3.target = {};
@@ -515,6 +497,36 @@ function openDatabase(onsuccess, onerror) {
     onsuccess(db);
   };
 
-  req.onerror = onerror;
+  req.onerror = function(err) {
+    if(err && err.target.errorCode === 12) {
+      gazel.version++;
+      openDatabase(onsuccess, onerror, onupgrade);
+
+      return;
+    }
+
+    onerror(err);
+  };
+  req.onblocked = onerror;
 }
+
+function ensureObjectStore(osName, callback, errback) {
+  openDatabase(function(db) {
+    if(!db.objectStoreNames.contains(osName)) {
+      db.close();
+      gazel.version++;
+
+      ensureObjectStore(osName, callback, errback);
+
+      return;
+    }
+
+    callback();
+  }, errback, function(db) {
+    if(!db.objectStoreNames.contains(osName)) {
+      db.createObjectStore(osName);
+    }
+  });
+}
+
 }).call(this);
