@@ -18,19 +18,21 @@ Client.prototype.del = function() {
           os = tx.objectStore(self.osName),
           left = keys.length;
 
+      var del = function() {
+        var key = keys.shift(),
+            req = os.delete(key);
+        req.onerror = self.handleError.bind(self);
+        req.onsuccess = function(e) {
+          left--;
+          
+          if(left === 0)
+            cb.call(self, deleted);
+        };
+      };
+
       while(keys.length > 0) {
-        (function() {
-          var key = keys.shift();
-          var req = os.delete(key);
-          req.onerror = self.handleError.bind(self);
-          req.onsuccess = function(e) {
-            left--;
-            
-            if(left === 0)
-              cb.call(self, deleted);
-          };
-        })();
-     }
+        del();  
+      }
     });
   }, callback);
 
