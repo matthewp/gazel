@@ -5,7 +5,7 @@ var exists = function (obj) {
 };
 
 var isInt = function(n) {
-  return !isNaN(n) && (n % 1 == 0);
+  return !isNaN(n) && (n % 1 === 0);
 };
 
 window.indexedDB = window.indexedDB
