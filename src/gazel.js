@@ -20,7 +20,7 @@ gazel.compatible = exists(window.indexedDB)
   && exists(window.IDBTransaction);
 
 gazel.createClient = function(osName) {
-  var client = new Client;
+  var client = new Client();
 
   client.osName = osName || gazel.osName;
   if(osName) {
