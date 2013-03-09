@@ -7,8 +7,9 @@ Client.prototype.incrby = function(key, increment, callback) {
       var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_WRITE);
       var os = tx.objectStore(self.osName);
       (function curl(val) {
+        var req;
         if(!exists(val)) {
-          var req = os.get(key);
+          req = os.get(key);
           req.onerror = self.handleError.bind(self);
           req.onsuccess = function(e) {
             curl(typeof e.target.result === 'undefined'
@@ -25,7 +26,7 @@ Client.prototype.incrby = function(key, increment, callback) {
         }
      
         var value = val + increment;
-        var req = os.put(value, key);
+        req = os.put(value, key);
         req.onerror = self.handleError.bind(self);
         req.onsuccess = function (e) {
           var res = e.target.result === key ? value : "ERR";
