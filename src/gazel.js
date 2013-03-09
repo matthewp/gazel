@@ -2,7 +2,7 @@ gazel.dbName = "gazeldb";
 gazel.osName = "gazelos";
 
 var VERSION_KEY = "_gazel.version",
-    version = localStorage[VERSION_KEY] && parseInt(localStorage[VERSION_KEY]) || 1;
+    version = localStorage[VERSION_KEY] && localStorage[VERSION_KEY] |0 || 1;
 Object.defineProperty(gazel, 'version', {
   
   get: function() {
