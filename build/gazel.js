@@ -243,6 +243,14 @@ Client.prototype = {
     }
 
     event.push(action);
+  },
+  
+  off: function(eventType, action) {
+    if(!action) {
+      this.events.del(eventType); return;
+    }
+    var event = this.events.get(eventType);
+    event.splice(event.indexOf(action), 1);
   }
 };
 Client.prototype.discard = function(callback) {
