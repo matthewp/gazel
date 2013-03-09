@@ -38,6 +38,7 @@ module.exports = function(grunt) {
       files: ['Gruntfile.js', 'src/**/*.js'],
         options: {
           es5: true,
+          laxbreak: true,
           globals: {
           }
         }
