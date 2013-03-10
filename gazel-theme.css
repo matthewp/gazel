@@ -23,3 +23,15 @@
 .gazel-brand #plans ul {
   list-style-type: square;
 }
+
+.gazel-brand .navbar-inverse .btn-navbar,
+.gazel-brand .dropdown-menu > li > a:hover,
+.gazel-brand .dropdown-menu > li > a:focus,
+.gazel-brand .dropdown-submenu:hover > a, 
+.gazel-brand .dropdown-submenu:focus > a {
+  background-color: #D0401D;
+  background-image: -moz-linear-gradient(top, #D0401D, #D0401D);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#D0401D), to(#D0401D));
+  background-image: -webkit-linear-gradient(top, #D0401D, #D0401D);
+  background-image: linear-gradient(to bottom, #D0401D, #D0401D);
+}
