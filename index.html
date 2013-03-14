@@ -3,17 +3,17 @@
 <head>
   <title>Gazel | key/value store for the browser</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="bootstrap.css" rel="stylesheet">
-  <link href="bootstrap-responsive.min.css" rel="stylesheet">
-  <link href="bootswatch.css" rel="stylesheet">
-  <link href="prettify.css" rel="stylesheet">
+  <link href="css/bootstrap.css" rel="stylesheet">
+  <link href="css/bootstrap-responsive.min.css" rel="stylesheet">
+  <link href="css/bootswatch.css" rel="stylesheet">
+  <link href="css/prettify.css" rel="stylesheet">
   <link href="//netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet">
-  <link href="gazel-theme.css" rel="stylesheet">
+  <link href="css/gazel-theme.css" rel="stylesheet">
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-  <script src="bootstrap.min.js"></script>
-  <script src="bootswatch.js"></script>
-  <script src="prettify.js"></script>
-  <script src="gazel.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+  <script src="js/bootswatch.js"></script>
+  <script src="js/prettify.js"></script>
+  <script src="js/gazel.js"></script>
 </head>
 <body id="top" class="preview gazel-brand" data-spy="scroll" data-target=".subnav" data-offset="80">
   <div class="navbar navbar-fixed-top navbar-inverse">
@@ -31,6 +31,18 @@
             <li class="dropdown">
               <a class="dropdown-toggle" data-toggle="dropdown" href="#">Commands <b class="caret"></b></a>
               <ul class="dropdown-menu" id="swatch-menu">
+                <li class="dropdown-submenu">
+                  <a href="#">Keys</a>
+                  <ul class="dropdown-menu">
+                    <li><a href="/commands/get.html">Get</a></li>
+                  </ul>
+                </li>
+                <li class="dropdown-submenu">
+                  <a href="#">Transactions</a>
+                  <ul class="dropdown-menu">
+                    <li><a href="/commands/multi.html">Multi</a></li>
+                  </ul>
+                </li>
                 <li><a href="#command-get">Get</a></li>
                 <li><a href="#command-set">Set</a></li>
                 <li><a href="#command-del">Del</a></li>
@@ -138,6 +150,35 @@ client.multi()
       <div class="page-header">
         <h1>Commands</h1>
       </div>
+      <div class="row">
+        <aside class="span4">
+          <h2>Contents</h2>
+        </aside>
+        <div class="span8">
+          <div class="row">
+            <div class="span4">
+              <h2>get</h2>
+              <div class="well">Get the value of a key.</div>
+            </div>
+            <div class="span4">
+              <h2>set</h2>
+              <div class="well">Set the value of a key.</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="span4">
+              <h2>del</h2>
+              <div class="well">
+                <div>Text goes here.</div>
+              </div>
+            </div>
+            <div class="span4">
+              <div class="well">Four</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div id="command-get" class="command">
         <h2>get</h2>
         <p>Get the value of a key.</p>

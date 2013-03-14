@@ -1,0 +1,10 @@
+.command .command-name,
+.command .command-param {
+  display: inline-block;
+  margin-right: 15px;
+}
+
+span.code {
+  background-color: #eeeeee;
+  font-weight: 600;
+}
