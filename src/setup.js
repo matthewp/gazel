@@ -5,7 +5,7 @@ var exists = function (obj) {
 };
 
 var isInt = function(n) {
-  return !isNaN(n) && (n % 1 == 0);
+  return !isNaN(n) && (n % 1 === 0);
 };
 
 window.indexedDB = window.indexedDB
@@ -19,8 +19,6 @@ window.IDBTransaction = window.IDBTransaction
 
 window.IDBTransaction.READ_ONLY = window.IDBTransaction.READ_ONLY || 'readonly';
 window.IDBTransaction.READ_WRITE = window.IDBTransaction.READ_WRITE || 'readwrite';
-
 window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange;
 
-var slice = Array.prototype.slice,
-    splice = Array.prototype.splice;
+var slice = Array.prototype.slice;

@@ -19,9 +19,7 @@ Client.prototype.incrby = function(key, increment, callback) {
       setValue(osName, trans, uuid, key, newValue, function(res) {
         cb.call(self, res === 'OK' ? newValue : 'ERR');
       }, errback, self);
-
     }, errback, self, IDBTransaction.READ_WRITE);
-
   }, callback);
 
   return this;

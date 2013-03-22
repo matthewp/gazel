@@ -19,14 +19,14 @@ describe('Get', function() {
 
   it('should return ints when set as ints', function(done) {
     var val = 45;
-    setGet(done, 'foo', val, function(setRep, getRep) {
+    setGet(done, 'foo-int', val, function(setRep, getRep) {
       return getRep === val;
     });
   });
 
   it('should return bools when set as bools', function(done) {
     var val = false;
-    setGet(done, 'foo', val, function(setRep, getRep) {
+    setGet(done, 'foo-bool', val, function(setRep, getRep) {
       return getRep === val;
     });
   });
