@@ -33,8 +33,8 @@ describe('Set', function() {
   });
 
   it('should always accept the max int', function(done) {
-    client.set('foo', maxInt, function() {
-      client.get('foo', function(res) {
+    client.set('foo-max', maxInt, function() {
+      client.get('foo-max', function(res) {
         done(assert.equal(res, maxInt, 'Not the max int!'));
       });
     });

@@ -1,6 +1,3 @@
-/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
-
-(function(undefined) {
 var gazel = gazel || {};
 
 var exists = function (obj) {
@@ -8,7 +5,7 @@ var exists = function (obj) {
 };
 
 var isInt = function(n) {
-  return !isNaN(n) && (n % 1 == 0);
+  return !isNaN(n) && (n % 1 === 0);
 };
 
 window.indexedDB = window.indexedDB
@@ -22,11 +19,10 @@ window.IDBTransaction = window.IDBTransaction
 
 window.IDBTransaction.READ_ONLY = window.IDBTransaction.READ_ONLY || 'readonly';
 window.IDBTransaction.READ_WRITE = window.IDBTransaction.READ_WRITE || 'readwrite';
-
 window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange;
 
-var slice = Array.prototype.slice,
-    splice = Array.prototype.splice;
+var slice = Array.prototype.slice;
+
 // Blantantly stolen from: https://gist.github.com/1308368
 // Credit to LevelOne and Jed, js gods that they are.
 
@@ -49,8 +45,9 @@ function createUuid(
                   :
          '-'            //  in other cases (if "a" is 9,14,19,24) insert "-"
       );
-  return b
+  return b;
  }
+
 function Dict() {
   this.items = {};
 }
@@ -101,6 +98,7 @@ Dict.prototype = {
   }
 
 };
+
 function Trans() {
   Dict.call(this);
 }
@@ -139,6 +137,7 @@ Trans.prototype.pull = function(db, os, uuid, perm) {
 
   return tx;
 };
+
 function Client() {
   this.chain = [];
   this.inMulti = false;
@@ -236,8 +235,17 @@ Client.prototype = {
     }
 
     event.push(action);
+  },
+  
+  off: function(eventType, action) {
+    if(!action) {
+      this.events.del(eventType); return;
+    }
+    var event = this.events.get(eventType);
+    event.splice(event.indexOf(action), 1);
   }
 };
+
 Client.prototype.discard = function(callback) {
   try {
     this.trans.abortAll();
@@ -247,6 +255,7 @@ Client.prototype.discard = function(callback) {
     this.handleError(err);
   }
 };
+
 Client.prototype.handleError = function() {
   var args = slice.call(arguments);
 
@@ -255,6 +264,7 @@ Client.prototype.handleError = function() {
       action.apply(null, args);
     });
 };
+
 Client.prototype.get = function(key, callback) {
   var self = this;
 
@@ -265,6 +275,7 @@ Client.prototype.get = function(key, callback) {
 
   return this;
 };
+
 Client.prototype.set = function(key, value, callback) {
   var self = this;
 
@@ -275,6 +286,7 @@ Client.prototype.set = function(key, value, callback) {
 
   return this;
 };
+
 Client.prototype.incrby = function(key, increment, callback) {
   var self = this;
 
@@ -296,9 +308,7 @@ Client.prototype.incrby = function(key, increment, callback) {
       setValue(osName, trans, uuid, key, newValue, function(res) {
         cb.call(self, res === 'OK' ? newValue : 'ERR');
       }, errback, self);
-
     }, errback, self, IDBTransaction.READ_WRITE);
-
   }, callback);
 
   return this;
@@ -307,6 +317,7 @@ Client.prototype.incrby = function(key, increment, callback) {
 Client.prototype.incr = function(key, callback) {
   return this.incrby(key, 1, callback);
 };
+
 Client.prototype.decrby = function(key, increment, callback) {
   return this.incrby(key, -increment, callback);
 };
@@ -314,6 +325,7 @@ Client.prototype.decrby = function(key, increment, callback) {
 Client.prototype.decr = function(key, callback) {
   return this.incrby(key, -1, callback);
 };
+
 Client.prototype.del = function() {
   var self = this,
       args = slice.call(arguments),
@@ -333,103 +345,18 @@ Client.prototype.del = function() {
 
   return this;
 };
-Client.prototype._sGetMemberKey = function(key, value) {
-  return key + ':' + value;
-};
 
-Client.prototype.sadd = function(key, value, callback) {
-  var self = this;
-
-  this.register('write', function(uuid, cb) {
-
-    var osKey = self._sGetMemberKey();
-    var obj = {
-      key: key,
-      value: value
-    };
-
-    setValue(gazel.setsOsName, self.trans, uuid,
-      osKey, obj, cb, self.handleError.bind(self), self);
-
-  }, callback);
-
-  return this;
-};
-
-Client.prototype.smembers = function(key, callback) {
-  var self = this;
-
-  this.register('read', function(uuid, cb) {
-    
-    var members = [];
-    transverseKeys(gazel.setsOsName, self.trans, uuid, 'key', key, function(res) {
-      
-      if(res) {
-        members.push(res.value);
-        return true;
-      } else {
-        cb.call(self, members);
-        return false;
-      }
-
-    }, self.handleError.bind(self), self);
-
-  }, callback);
-
-  return this;
-};
-
-Client.prototype.scard = function(key, callback) {
-  this.smembers(key, function(members) {
-    callback(members.length || 0);
-  });
-
-  return this;
-};
-
-Client.prototype.sismember = function(key, value, callback) {
-  var self = this;
-
-  this.register('read', function(uuid, cb) {
-    var osKey = self._sGetMemberKey(key, value);
-
-    getKey(gazel.setsOsName, self.trans, uuid, osKey, function(res) {
-      cb(res !== undefined);
-    }, self.handleError.bind(self), self);
-  }, callback);
-
-  return this;
-};
-
-Client.prototype.sdel = function(key, callback) {
-  var self = this;
-
-  this.register('write', function(uuid, cb) {
-    self.smembers(key, function(members) {
-      var deleted = members.length;
-
-      var membersKeys = members.map(function(member) {
-        return self._sGetMemberKey(key, member);
-      });
-
-      deleteKey(gazel.setsOsName, self.trans, uuid, membersKeys, function() {
-        cb.call(self, deleted);
-      }, self.handleError.bind(self), self);
-    });
-  }, callback);
-
-
-  return this;
-};gazel.print = function() {
+gazel.print = function() {
   var args = slice.call(arguments);
   if(args.length === 0)
     return;
 
-  (args[0] instanceof Array ? args[0] : [args[0]])
+  (Array.isArray(args[0]) ? args[0] : [args[0]])
     .forEach(function(item) {
       console.log(item);
     });
 };
+
 gazel.dbName = "gazeldb";
 gazel.osName = "gazelos";
 gazel.setsOsName = "gazelos.sets";
@@ -443,6 +370,7 @@ gazel.createClient = function() {
 };
 
 this.gazel = gazel;
+
 var db;
 var loadingDb = false;
 
@@ -618,4 +546,3 @@ function transverseKeys(osName, trans, uuid, indexName, value, callback, errback
 
   });
 }
-}).call(this);
