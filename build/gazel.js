@@ -347,15 +347,14 @@ Client.prototype.del = function() {
 };
 
 Client.prototype._sGetMemberKey = function(key, value) {
-  return key + ':' + value;
+  return key + ':' + JSON.stringify(value);
 };
 
 Client.prototype.sadd = function(key, value, callback) {
   var self = this;
 
   this.register('write', function(uuid, cb) {
-
-    var osKey = self._sGetMemberKey();
+    var osKey = self._sGetMemberKey(key, value);
     var obj = {
       key: key,
       value: value
@@ -365,7 +364,6 @@ Client.prototype.sadd = function(key, value, callback) {
       osKey, obj, cb, self.handleError.bind(self), self);
 
   }, callback);
-
   return this;
 };
 
@@ -376,7 +374,6 @@ Client.prototype.smembers = function(key, callback) {
     
     var members = [];
     transverseKeys(gazel.setsOsName, self.trans, uuid, 'key', key, function(res) {
-      
       if(res) {
         members.push(res.value);
         return true;
@@ -384,7 +381,6 @@ Client.prototype.smembers = function(key, callback) {
         cb.call(self, members);
         return false;
       }
-
     }, self.handleError.bind(self), self);
 
   }, callback);
@@ -420,6 +416,9 @@ Client.prototype.sdel = function(key, callback) {
   this.register('write', function(uuid, cb) {
     self.smembers(key, function(members) {
       var deleted = members.length;
+      if(!deleted) {
+        cb.call(self, deleted); return;
+      }
 
       var membersKeys = members.map(function(member) {
         return self._sGetMemberKey(key, member);
@@ -434,6 +433,7 @@ Client.prototype.sdel = function(key, callback) {
 
   return this;
 };
+
 gazel.print = function() {
   var args = slice.call(arguments);
   if(args.length === 0)

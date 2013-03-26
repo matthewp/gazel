@@ -33,9 +33,11 @@ describe('Sets', function() {
   });
 
   it('Scard should retrieve a count of the members in a set.', function(done) {
-    client.scard(SET_KEY, function(cnt) {
-      assert.equal(cnt, ADDS_COUNT, 'Count is not correct.');
-      done();
+    client.sadd(SET_KEY, {}, function(res) {
+      client.scard(SET_KEY, function(cnt) {
+        assert.equal(cnt, ADDS_COUNT, 'Count is not correct.');
+        done();
+      });
     });
   });
 
