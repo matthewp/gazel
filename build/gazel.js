@@ -454,7 +454,7 @@ gazel.compatible = exists(window.indexedDB)
   && exists(window.IDBTransaction);
 
 gazel.createClient = function() {
-  return new Client;
+  return new Client();
 };
 
 this.gazel = gazel;
@@ -594,21 +594,21 @@ function deleteKey(osName, trans, uuid, keys, callback, errback, context) {
     var tx = trans.pull(db, osName, uuid, IDBTransaction.READ_WRITE),
         os = tx.objectStore(osName),
         remaining = keys.length,
-        deleted = keys.length;
+        deleted = keys.length,
+        rm = function(key) {
+          var req = os.delete(key);
+          req.onerror = errback;
+          req.onsuccess = function(e) {
+            remaining--;
+
+            if(remaining === 0){
+              callback.call(context, deleted);
+            }
+          };
+        };
 
     while(keys.length > 0) {
-      (function() {
-        var key = keys.shift();
-        var req = os.delete(key);
-        req.onerror = errback;
-        req.onsuccess = function(e) {
-          remaining--;
-
-          if(remaining === 0){
-            callback.call(context, deleted);
-          }
-        };
-      })();
+      rm(keys.shift());
     }
 
   });

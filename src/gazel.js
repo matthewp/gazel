@@ -7,7 +7,7 @@ gazel.compatible = exists(window.indexedDB)
   && exists(window.IDBTransaction);
 
 gazel.createClient = function() {
-  return new Client;
+  return new Client();
 };
 
 this.gazel = gazel;
