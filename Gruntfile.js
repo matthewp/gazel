@@ -15,6 +15,7 @@ module.exports = function(grunt) {
     "src/incr.js",
     "src/decr.js",
     "src/del.js",
+    "src/sadd.js",
     "src/print.js",
     "src/gazel.js",
     "src/dbfunctions.js"
