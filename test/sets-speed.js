@@ -9,20 +9,13 @@ describe('Sets speed', function() {
   */
   before(function(done) {
     client.sdel(SET_KEY, function() {
-      var cnt = 10000,
-          fin = 0,
-          addOne = function(val) {
-            client.sadd(SET_KEY, val, function() {
-              fin++;
-              if(fin === 10000) {
-                done();
-              }
-            });
-          };
-
-      while(cnt > 0) {
-        addOne(cnt--);
+      client.multi();
+      for(var i = 0; i < 10000; i++) {
+        client.sadd(SET_KEY, i);
       }
+      client.exec(function() {
+        done();
+      });
     });
   });
 

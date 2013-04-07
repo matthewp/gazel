@@ -362,7 +362,6 @@ Client.prototype.sadd = function(key, value, callback) {
 
     setValue(gazel.setsOsName, self.trans, uuid,
       osKey, obj, cb, self.handleError.bind(self), self);
-
   }, callback);
   return this;
 };
