@@ -113,5 +113,14 @@ Client.prototype = {
     }
     var event = this.events.get(eventType);
     event.splice(event.indexOf(action), 1);
-  }
+  },
+
+	emit: function(eventType) {
+		var args = slice.call(arguments, 1);
+
+		(this.events.get(eventType) || [])
+			.forEach(function(action) {
+				action.apply(null, args);
+			});
+	}
 };

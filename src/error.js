@@ -1,8 +1,4 @@
 Client.prototype.handleError = function() {
-  var args = slice.call(arguments);
-
-  (this.events.get('error') || [])
-    .forEach(function(action) {
-      action.apply(null, args);
-    });
+	var args = ['error'].concat(slice.call(arguments));
+	this.emit.apply(this, args);	
 };
