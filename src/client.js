@@ -116,11 +116,14 @@ Client.prototype = {
   },
 
 	emit: function(eventType) {
-		var args = slice.call(arguments, 1);
+		var args = slice.call(arguments, 1),
+        self = this;
 
-		(this.events.get(eventType) || [])
-			.forEach(function(action) {
-				action.apply(null, args);
-			});
+    setTimeout(function(){
+      (self.events.get(eventType) || [])
+        .forEach(function(action) {
+          action.apply(null, args);
+        });
+    });
 	}
 };

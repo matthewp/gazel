@@ -8,10 +8,16 @@ Client.prototype.del = function() {
   else
     args.splice(args.length - 1);
   
-  var keys = args,
+  this.register('write', this._del(args), callback);
+
+  return this;
+};
+
+Client.prototype._del = function(keys) {
+  var self = this,
       deleted = keys.length;
 
-  this.register('write', function(uuid, cb) {
+  return function(uuid, cb) {
     openDatabase(function(db) {
      
       var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_WRITE),
@@ -24,9 +30,11 @@ Client.prototype.del = function() {
         req.onerror = self.handleError.bind(self);
         req.onsuccess = function(e) {
           left--;
+          self.emit('delete', key);
           
-          if(left === 0)
+          if(left === 0) {
             cb.call(self, deleted);
+          }
         };
       };
 
@@ -34,7 +42,5 @@ Client.prototype.del = function() {
         del();  
       }
     });
-  }, callback);
-
-  return this;
+  };
 };

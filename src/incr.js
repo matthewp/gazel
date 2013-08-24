@@ -20,9 +20,7 @@ Client.prototype.incrby = function(key, increment, callback) {
         }
 
         if(!isInt(val)) {
-          self.handleError('ERROR: Cannot increment a non-integer value.');
-
-          return;
+          return self.handleError('ERROR: Cannot increment a non-integer value.');
         }
      
         var value = val + increment;
@@ -30,6 +28,7 @@ Client.prototype.incrby = function(key, increment, callback) {
         req.onerror = self.handleError.bind(self);
         req.onsuccess = function (e) {
           var res = e.target.result === key ? value : "ERR";
+          self.emit('set', key, value);
           cb.call(self, res);
         };
 

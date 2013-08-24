@@ -252,7 +252,19 @@ Client.prototype = {
     }
     var event = this.events.get(eventType);
     event.splice(event.indexOf(action), 1);
-  }
+  },
+
+	emit: function(eventType) {
+		var args = slice.call(arguments, 1),
+        self = this;
+
+    setTimeout(function(){
+      (self.events.get(eventType) || [])
+        .forEach(function(action) {
+          action.apply(null, args);
+        });
+    });
+	}
 };
 
 Client.prototype.discard = function(callback) {
@@ -266,12 +278,8 @@ Client.prototype.discard = function(callback) {
 };
 
 Client.prototype.handleError = function() {
-  var args = slice.call(arguments);
-
-  (this.events.get('error') || [])
-    .forEach(function(action) {
-      action.apply(null, args);
-    });
+	var args = ['error'].concat(slice.call(arguments));
+	this.emit.apply(this, args);	
 };
 
 Client.prototype.get = function(key, callback) {
@@ -298,7 +306,17 @@ Client.prototype.get = function(key, callback) {
 Client.prototype.set = function(key, value, callback) {
   var self = this;
 
-  this.register('write', function(uuid, cb) {
+  this.register('write',
+                this._set(key, value),
+                callback);
+
+  return this;
+};
+
+Client.prototype._set = function(key, value) {
+  var self = this;
+
+  return function(uuid, cb) {
     openDatabase(function(db) {
 
       var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_WRITE);
@@ -307,13 +325,12 @@ Client.prototype.set = function(key, value, callback) {
       req.onerror = self.handleError.bind(self);
       req.onsuccess = function (e) {
         var res = e.target.result === key ? 'OK' : 'ERR';
+        self.emit('set', key, value);
         cb.call(self, res);
       };
 
     }, self.handleError.bind(self));
-  }, callback);
-
-  return this;
+  };
 };
 
 Client.prototype.incrby = function(key, increment, callback) {
@@ -338,9 +355,7 @@ Client.prototype.incrby = function(key, increment, callback) {
         }
 
         if(!isInt(val)) {
-          self.handleError('ERROR: Cannot increment a non-integer value.');
-
-          return;
+          return self.handleError('ERROR: Cannot increment a non-integer value.');
         }
      
         var value = val + increment;
@@ -348,6 +363,7 @@ Client.prototype.incrby = function(key, increment, callback) {
         req.onerror = self.handleError.bind(self);
         req.onsuccess = function (e) {
           var res = e.target.result === key ? value : "ERR";
+          self.emit('set', key, value);
           cb.call(self, res);
         };
 
@@ -381,10 +397,16 @@ Client.prototype.del = function() {
   else
     args.splice(args.length - 1);
   
-  var keys = args,
+  this.register('write', this._del(args), callback);
+
+  return this;
+};
+
+Client.prototype._del = function(keys) {
+  var self = this,
       deleted = keys.length;
 
-  this.register('write', function(uuid, cb) {
+  return function(uuid, cb) {
     openDatabase(function(db) {
      
       var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_WRITE),
@@ -397,9 +419,11 @@ Client.prototype.del = function() {
         req.onerror = self.handleError.bind(self);
         req.onsuccess = function(e) {
           left--;
+          self.emit('delete', key);
           
-          if(left === 0)
+          if(left === 0) {
             cb.call(self, deleted);
+          }
         };
       };
 
@@ -407,9 +431,7 @@ Client.prototype.del = function() {
         del();  
       }
     });
-  }, callback);
-
-  return this;
+  };
 };
 
 gazel.print = function() {
