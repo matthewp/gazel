@@ -1,6 +1,3 @@
-/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
-
-(function(undefined) {
 var gazel = gazel || {};
 
 var exists = function (obj) {
@@ -8,7 +5,7 @@ var exists = function (obj) {
 };
 
 var isInt = function(n) {
-  return !isNaN(n) && (n % 1 == 0);
+  return !isNaN(n) && (n % 1 === 0);
 };
 
 window.indexedDB = window.indexedDB
@@ -24,6 +21,7 @@ window.IDBTransaction.READ_ONLY = window.IDBTransaction.READ_ONLY || 'readonly';
 window.IDBTransaction.READ_WRITE = window.IDBTransaction.READ_WRITE || 'readwrite';
 
 var slice = Array.prototype.slice;
+
 // Blantantly stolen from: https://gist.github.com/1308368
 // Credit to LevelOne and Jed, js gods that they are.
 
@@ -46,8 +44,9 @@ function createUuid(
                   :
          '-'            //  in other cases (if "a" is 9,14,19,24) insert "-"
       );
-  return b
+  return b;
  }
+
 function Dict() {
   this.items = {};
 }
@@ -98,6 +97,7 @@ Dict.prototype = {
   }
 
 };
+
 function Trans() {
   Dict.call(this);
 }
@@ -136,6 +136,7 @@ Trans.prototype.pull = function(db, os, uuid, perm) {
 
   return tx;
 };
+
 function Client() {
   this.chain = [];
   this.inMulti = false;
@@ -243,8 +244,29 @@ Client.prototype = {
     }
 
     event.push(action);
-  }
+  },
+  
+  off: function(eventType, action) {
+    if(!action) {
+      this.events.del(eventType); return;
+    }
+    var event = this.events.get(eventType);
+    event.splice(event.indexOf(action), 1);
+  },
+
+	emit: function(eventType) {
+		var args = slice.call(arguments, 1),
+        self = this;
+
+    setTimeout(function(){
+      (self.events.get(eventType) || [])
+        .forEach(function(action) {
+          action.apply(null, args);
+        });
+    });
+	}
 };
+
 Client.prototype.discard = function(callback) {
   try {
     this.trans.abortAll();
@@ -254,14 +276,12 @@ Client.prototype.discard = function(callback) {
     this.handleError(err);
   }
 };
-Client.prototype.handleError = function() {
-  var args = slice.call(arguments);
 
-  (this.events.get('error') || [])
-    .forEach(function(action) {
-      action.apply(null, args);
-    });
+Client.prototype.handleError = function() {
+	var args = ['error'].concat(slice.call(arguments));
+	this.emit.apply(this, args);	
 };
+
 Client.prototype.get = function(key, callback) {
   var self = this;
 
@@ -282,10 +302,21 @@ Client.prototype.get = function(key, callback) {
 
   return this;
 };
+
 Client.prototype.set = function(key, value, callback) {
   var self = this;
 
-  this.register('write', function(uuid, cb) {
+  this.register('write',
+                this._set(key, value),
+                callback);
+
+  return this;
+};
+
+Client.prototype._set = function(key, value) {
+  var self = this;
+
+  return function(uuid, cb) {
     openDatabase(function(db) {
 
       var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_WRITE);
@@ -294,14 +325,14 @@ Client.prototype.set = function(key, value, callback) {
       req.onerror = self.handleError.bind(self);
       req.onsuccess = function (e) {
         var res = e.target.result === key ? 'OK' : 'ERR';
+        self.emit('set', key, value);
         cb.call(self, res);
       };
 
     }, self.handleError.bind(self));
-  }, callback);
-
-  return this;
+  };
 };
+
 Client.prototype.incrby = function(key, increment, callback) {
   var self = this;
 
@@ -311,8 +342,9 @@ Client.prototype.incrby = function(key, increment, callback) {
       var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_WRITE);
       var os = tx.objectStore(self.osName);
       (function curl(val) {
+        var req;
         if(!exists(val)) {
-          var req = os.get(key);
+          req = os.get(key);
           req.onerror = self.handleError.bind(self);
           req.onsuccess = function(e) {
             curl(typeof e.target.result === 'undefined'
@@ -323,16 +355,15 @@ Client.prototype.incrby = function(key, increment, callback) {
         }
 
         if(!isInt(val)) {
-          self.handleError('ERROR: Cannot increment a non-integer value.');
-
-          return;
+          return self.handleError('ERROR: Cannot increment a non-integer value.');
         }
      
         var value = val + increment;
-        var req = os.put(value, key);
+        req = os.put(value, key);
         req.onerror = self.handleError.bind(self);
         req.onsuccess = function (e) {
           var res = e.target.result === key ? value : "ERR";
+          self.emit('set', key, value);
           cb.call(self, res);
         };
 
@@ -347,6 +378,7 @@ Client.prototype.incrby = function(key, increment, callback) {
 Client.prototype.incr = function(key, callback) {
   return this.incrby(key, 1, callback);
 };
+
 Client.prototype.decrby = function(key, increment, callback) {
   return this.incrby(key, -increment, callback);
 };
@@ -354,6 +386,7 @@ Client.prototype.decrby = function(key, increment, callback) {
 Client.prototype.decr = function(key, callback) {
   return this.incrby(key, -1, callback);
 };
+
 Client.prototype.del = function() {
   var self = this,
       args = slice.call(arguments),
@@ -364,34 +397,43 @@ Client.prototype.del = function() {
   else
     args.splice(args.length - 1);
   
-  var keys = args,
+  this.register('write', this._del(args), callback);
+
+  return this;
+};
+
+Client.prototype._del = function(keys) {
+  var self = this,
       deleted = keys.length;
 
-  this.register('write', function(uuid, cb) {
+  return function(uuid, cb) {
     openDatabase(function(db) {
      
       var tx = self.trans.pull(db, self.osName, uuid, IDBTransaction.READ_WRITE),
           os = tx.objectStore(self.osName),
           left = keys.length;
 
-      while(keys.length > 0) {
-        (function() {
-          var key = keys.shift();
-          var req = os.delete(key);
-          req.onerror = self.handleError.bind(self);
-          req.onsuccess = function(e) {
-            left--;
-            
-            if(left === 0)
-              cb.call(self, deleted);
-          };
-        })();
-     }
-    });
-  }, callback);
+      var del = function() {
+        var key = keys.shift(),
+            req = os.delete(key);
+        req.onerror = self.handleError.bind(self);
+        req.onsuccess = function(e) {
+          left--;
+          self.emit('delete', key);
+          
+          if(left === 0) {
+            cb.call(self, deleted);
+          }
+        };
+      };
 
-  return this;
+      while(keys.length > 0) {
+        del();  
+      }
+    });
+  };
 };
+
 gazel.print = function() {
   var args = slice.call(arguments);
   if(args.length === 0)
@@ -402,11 +444,12 @@ gazel.print = function() {
       console.log(item);
     });
 };
+
 gazel.dbName = "gazeldb";
 gazel.osName = "gazelos";
 
 var VERSION_KEY = "_gazel.version",
-    version = localStorage[VERSION_KEY] && parseInt(localStorage[VERSION_KEY]) || 1;
+    version = localStorage[VERSION_KEY] && localStorage[VERSION_KEY] |0 || 1;
 Object.defineProperty(gazel, 'version', {
   
   get: function() {
@@ -424,7 +467,7 @@ gazel.compatible = exists(window.indexedDB)
   && exists(window.IDBTransaction);
 
 gazel.createClient = function(osName) {
-  var client = new Client;
+  var client = new Client();
 
   client.osName = osName || gazel.osName;
   if(osName) {
@@ -435,6 +478,7 @@ gazel.createClient = function(osName) {
 };
 
 this.gazel = gazel;
+
 var db;
 var loadingDb = false;
 
@@ -528,5 +572,3 @@ function ensureObjectStore(osName, callback, errback) {
     }
   });
 }
-
-}).call(this);

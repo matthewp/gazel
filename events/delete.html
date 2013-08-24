@@ -86,37 +86,22 @@
 
   <div class="container">
     <header class="row">
+      <h1>event</h1>
       <hgroup class="command">
-        <h1 class="command-name">set</h1>
+        <h1 class="command-name">'delete'</h1>
         <h2 class="command-param">key</h2>
-        <h2 class="command-param">value</h2>
       </hgroup>
     </header>
     <div class="row">
       <div class="span8">
-        <p>Sets the value of a key to value.</p>
+        <p>Called when a key is deleted. If multiple keys are deleted, an event will be raised for each.</p>
         <pre class="prettyprint language-js">
-client.set('foo', 13.7, function(res) {
-  assert(res === 'OK');
-});</pre>
-        <div>
-          <h2>Result</h2>
-          <p>The result is a string of the value of either <span class="code">OK</span> when successful or <span class="code">ERR</span> when there was an error.</p>
-        </div>
-      </div>
-      <div class="span4">
-        <div class="well">
-          <h4>Parameters</h4>
-          <ul>
-            <li>Key &lArr; string</li>
-            <li>Set &lArr; any</li>
-            <li>Callback &lArr; function</li>
-          </ul>
-          <h4>Callback</h4>
-          <ul>
-            <li>Result &lArr; string</li>
-          </ul>
-        </div>
+client.on('delete', function(key){
+  // This function is called twice.
+});
+
+client.del('key1', 'key2', function(){});
+</pre>
       </div>
     </div>
   </div>
