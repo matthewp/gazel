@@ -4,6 +4,7 @@
   "version": "0.1.2",
   "devDependencies": {
     "gulp": "^3.8.11",
+    "steal": "^0.7.1",
     "steal-tools": "^0.7.1"
   },
   "system": {
