@@ -1,4 +1,6 @@
-gazel.print = function() {
+import slice from './slice';
+
+export function print() {
   var args = slice.call(arguments);
   if(args.length === 0)
     return;

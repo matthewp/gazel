@@ -1,10 +1,16 @@
 {
-  "name": "Gazel",
+  "name": "gazel",
+  "main": "dist/cjs/gazel",
   "version": "0.1.2",
   "devDependencies": {
-    "grunt": "~0.4.0",
-    "grunt-contrib-jshint": "~0.2.0",
-    "grunt-contrib-uglify": "~0.1.2",
-    "grunt-contrib-concat": "~0.1.3"
+    "gulp": "^3.8.11",
+    "steal-tools": "^0.7.1"
+  },
+  "system": {
+    "main": "gazel",
+    "directories": {
+      "lib": "src"
+    },
+    "transpiler": "babel"
   }
 }

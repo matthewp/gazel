@@ -1,4 +1,4 @@
-Client.prototype.get = function(key, callback) {
+export function get(key, callback) {
   var self = this;
 
   this.register('read', function(uuid, cb) {

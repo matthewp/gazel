@@ -1,4 +1,4 @@
-Client.prototype.set = function(key, value, callback) {
+export function set(key, value, callback) {
   var self = this;
 
   this.register('write',
@@ -8,7 +8,7 @@ Client.prototype.set = function(key, value, callback) {
   return this;
 };
 
-Client.prototype._set = function(key, value) {
+export function _set(key, value) {
   var self = this;
 
   return function(uuid, cb) {

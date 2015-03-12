@@ -1,12 +1,3 @@
-var gazel = gazel || {};
-
-var exists = function (obj) {
-  return typeof obj !== 'undefined' && obj != null;
-};
-
-var isInt = function(n) {
-  return !isNaN(n) && (n % 1 === 0);
-};
 
 window.indexedDB = window.indexedDB
   || window.mozIndexedDB
@@ -19,5 +10,3 @@ window.IDBTransaction = window.IDBTransaction
 
 window.IDBTransaction.READ_ONLY = window.IDBTransaction.READ_ONLY || 'readonly';
 window.IDBTransaction.READ_WRITE = window.IDBTransaction.READ_WRITE || 'readwrite';
-
-var slice = Array.prototype.slice;

@@ -1,7 +1,7 @@
-Client.prototype.decrby = function(key, increment, callback) {
+export function decrby(key, increment, callback) {
   return this.incrby(key, -increment, callback);
 };
 
-Client.prototype.decr = function(key, callback) {
+export function decr(key, callback) {
   return this.incrby(key, -1, callback);
 };

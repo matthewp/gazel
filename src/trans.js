@@ -1,38 +1,35 @@
-function Trans() {
-  Dict.call(this);
-}
+import Dict from './dict';
 
-Trans.prototype = Object.create(Dict.prototype);
-Trans.prototype.constructor = Trans;
+export default class Trans extends Dict {
+  add() {
+    var uuid = createUuid();
+    this.set(uuid, undefined);
 
-Trans.prototype.add = function() {
-  var uuid = createUuid();
-  this.set(uuid, undefined);
-
-  return uuid;
-};
-
-Trans.prototype.abortAll = function() {
-  var self = this,
-      keys = self.keys();
-
-  keys.forEach(function(key) {
-    var tx = self.get(key);
-    if(tx)
-      tx.abort();
-
-    self.del(key);
-  });
-};
-
-Trans.prototype.pull = function(db, os, uuid, perm) {
-  var tx = this.get(uuid);
-  if(!tx) {
-    tx = db.transaction([os], perm);
-    tx.onerror = onerror;
-
-    this.set(uuid, tx);
+    return uuid;
   }
 
-  return tx;
-};
+  abortAll() {
+    var self = this,
+        keys = self.keys();
+
+    keys.forEach(function(key) {
+      var tx = self.get(key);
+      if(tx)
+        tx.abort();
+
+      self.del(key);
+    });
+  }
+
+  pull(db, os, uuid, perm) {
+    var tx = this.get(uuid);
+    if(!tx) {
+      tx = db.transaction([os], perm);
+      tx.onerror = onerror;
+
+      this.set(uuid, tx);
+    }
+
+    return tx;
+  }
+}

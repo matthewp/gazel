@@ -1,3 +1,10 @@
+import { print } from './print';
+import Client from './client';
+import exists from './exists';
+import './polyfill';
+
+var gazel = {};
+
 gazel.dbName = "gazeldb";
 gazel.osName = "gazelos";
 
@@ -30,4 +37,6 @@ gazel.createClient = function(osName) {
   return client;
 };
 
-this.gazel = gazel;
+window.gazel = gazel;
+
+export { gazel as default };

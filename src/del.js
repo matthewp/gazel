@@ -1,4 +1,6 @@
-Client.prototype.del = function() {
+import slice from './slice';
+
+export function del() {
   var self = this,
       args = slice.call(arguments),
       callback = args[args.length > 0 ? args.length - 1 : 0];
@@ -13,7 +15,7 @@ Client.prototype.del = function() {
   return this;
 };
 
-Client.prototype._del = function(keys) {
+export function _del(keys) {
   var self = this,
       deleted = keys.length;
 

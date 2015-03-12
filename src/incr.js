@@ -1,4 +1,7 @@
-Client.prototype.incrby = function(key, increment, callback) {
+import exists from './exists';
+import isInt from './is_int';
+
+export function incrby(key, increment, callback) {
   var self = this;
 
   this.register('write', function(uuid, cb) {
@@ -40,6 +43,6 @@ Client.prototype.incrby = function(key, increment, callback) {
   return this;
 };
 
-Client.prototype.incr = function(key, callback) {
+export function incr(key, callback) {
   return this.incrby(key, 1, callback);
 };

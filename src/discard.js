@@ -1,4 +1,4 @@
-Client.prototype.discard = function(callback) {
+export function discard(callback) {
   try {
     this.trans.abortAll();
 
