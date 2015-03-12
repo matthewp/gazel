@@ -9,7 +9,7 @@
   "system": {
     "main": "gazel",
     "directories": {
-      "lib": "src"
+      "lib": "lib"
     },
     "transpiler": "babel"
   }
