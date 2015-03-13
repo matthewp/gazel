@@ -1,3 +1,9 @@
+import gazel from "gazel";
+import chai from "chai";
+import _ from "lodash";
+
+const assert = chai.assert;
+
 describe('Get', function() {
   'use strict';
 

@@ -1,3 +1,9 @@
+import gazel from "gazel";
+import chai from "chai";
+import _ from "lodash";
+
+const assert = chai.assert;
+
 describe('Multi', function() {
   'use strict';
 
@@ -26,7 +32,7 @@ describe('Multi', function() {
   it('all sets should be OK.', function(done) {
     var sets = _.first(results, 4);
     var allOk = _.all(sets, function(res) {
-      return res[0] === 'OK';
+      return res === 'OK';
     });
 
     done(assert.ok(allOk, 'Not all sets returned with OK.'));

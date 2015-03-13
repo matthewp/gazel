@@ -2,25 +2,15 @@
 <head>
   <meta charset="utf-8">
   <title>Gazel Tests</title>
-  <link rel="stylesheet" href="/test/res/mocha.css" />
-  <script src="/test/res/assert.js"></script>
-  <script src="/test/res/mocha.js"></script>
-  <script src="/test/res/underscore-min.js"></script>
-  <script src="/build/gazel.js"></script>
+  <link rel="stylesheet" href="../node_modules/mocha/mocha.css" />
+  <script src="../node_modules/mocha/mocha.js"></script>
   <script>
     mocha.setup('bdd');
   </script>
-  <script src="/test/set.js"></script>
-  <script src="/test/get.js"></script>
-  <script src="/test/incr.js"></script>
-  <script src="/test/del.js"></script>
-  <script src="/test/multi.js"></script>
-  <script src="/test/change_objectstore.js"></script>
-  <script src="/test/events.js"></script>
+  <script src="../node_modules/steal/steal.js"
+    data-main="test/test"></script>
   <script>
-    window.addEventListener('load', function onLoad() {
-      window.removeEventListener('load', onLoad);
-
+    steal.done().then(function() {
       mocha.run().globals(['location']);
     });
   </script>
