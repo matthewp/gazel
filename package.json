@@ -1,7 +1,7 @@
 {
   "name": "gazel",
   "main": "dist/cjs/gazel",
-  "version": "0.1.2",
+  "version": "1.0.0",
   "devDependencies": {
     "chai": "^2.1.1",
     "gulp": "^3.8.11",
