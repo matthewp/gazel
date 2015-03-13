@@ -1,3 +1,8 @@
+import gazel from "gazel";
+import chai from "chai";
+
+const assert = chai.assert;
+
 describe('Set', function() {
   'use strict';
 

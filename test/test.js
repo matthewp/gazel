@@ -1,0 +1,9 @@
+define([
+  'test/set',
+  'test/get',
+  'test/incr',
+  'test/del',
+  'test/multi',
+  'test/change_objectstore',
+  'test/events'
+]);
